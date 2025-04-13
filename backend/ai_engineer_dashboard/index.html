@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Engineer Dashboard - Upload ML Models</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        #dashboard {
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            width: 500px;
+        }
+
+        h2, h3 {
+            color: #333;
+        }
+
+        input, textarea, button {
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        button {
+            background-color: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        #success-message {
+            color: green;
+            margin-top: 20px;
+            display: none;
+        }
+
+        #error-message {
+            color: red;
+            margin-top: 20px;
+            display: none;
+        }
+
+        #description {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<h2>AI Engineer Dashboard</h2>
+<div id="dashboard">
+    <h3>Upload Trained ML Model</h3>
+    <form id="modelUploadForm">
+        <input type="text" name="name" placeholder="Model Name" required>
+        <textarea name="description" placeholder="Model Description (optional)"></textarea>
+        <input type="file" name="model_file" id="modelFile" required>
+        <button type="submit">Upload Model</button>
+    </form>
+
+    <div id="success-message">Model uploaded successfully!</div>
+    <div id="error-message">An error occurred. Please try again.</div>
+</div>
+
+<p id="description">Upload your trained model (e.g. .pkl or .joblib) to integrate it into the MLAAS platform.</p>
+
+<script>
+    document.getElementById('modelUploadForm').onsubmit = function(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        fetch('/api/models/models/', {
+            method: 'POST',
+            headers: {
+                // 'Authorization': 'Bearer <your_token>' // Add token if using auth
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Upload failed");
+            }
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('success-message').style.display = 'block';
+            document.getElementById('error-message').style.display = 'none';
+            form.reset();
+        })
+        .catch(() => {
+            document.getElementById('error-message').style.display = 'block';
+        });
+    };
+</script>
+
+</body>
+</html>

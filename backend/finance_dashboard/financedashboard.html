@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Finance Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding-top: 60px;
+    }
+
+    #dashboard {
+      background-color: #fff;
+      padding: 20px;
+      width: 600px;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      font-size: 16px;
+      width: 90%;
+    }
+
+    button {
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #555;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    #error-message {
+      color: red;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="dashboard">
+  <h2>Finance Dashboard</h2>
+
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="loadBilling()">Load Billing Summary</button>
+
+  <div id="error-message"></div>
+
+  <table id="billing-table" style="display: none;">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Actions</th>
+        <th>Total Due ($)</th>
+      </tr>
+    </thead>
+    <tbody id="billing-body"></tbody>
+  </table>
+</div>
+
+<script>
+  function loadBilling() {
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+    const errorMsg = document.getElementById("error-message");
+    const billingTable = document.getElementById("billing-table");
+    const billingBody = document.getElementById("billing-body");
+
+    fetch("http://localhost:8000/api/billing/summary/", {
+      headers: {
+        "Authorization": "Basic " + btoa(user + ":" + pass)
+      }
+    })
+    .then(response => {
+      if (!response.ok) throw new Error("Access denied");
+      return response.json();
+    })
+    .then(data => {
+      billingTable.style.display = "table";
+      billingBody.innerHTML = "";
+      errorMsg.textContent = "";
+
+      data.forEach(entry => {
+        const row = `<tr>
+          <td>${entry.user__username}</td>
+          <td>${entry.total_actions}</td>
+          <td>${parseFloat(entry.total_due).toFixed(2)}</td>
+        </tr>`;
+        billingBody.innerHTML += row;
+      });
+    })
+    .catch(() => {
+      billingTable.style.display = "none";
+      errorMsg.textContent = "Access denied or server error. Ensure you're a finance admin.";
+    });
+  }
+</script>
+
+</body>
+</html>
