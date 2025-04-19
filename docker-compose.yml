@@ -1,11 +1,28 @@
+#version: '3.9'
+
 services:
   web:
-    build: ./backend
-    command: python manage.py runserver 0.0.0.0:8000
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: desd-web-1
     volumes:
       - ./backend:/code
-    working_dir: /code
     ports:
       - "8000:8000"
-    stdin_open: true
-    tty: true
+    depends_on:
+      - mlaas
+    command: python manage.py runserver 0.0.0.0:8000
+
+
+  mlaas:
+    build:
+      context: ./mlaas_service
+    container_name: mlaas-service
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./mlaas_service:/app
+      - ./backend/media/ai_models:/app/models
+    environment:
+      - MODEL_PATH=models/active_model.pkl
