@@ -1,5 +1,9 @@
-<form action="{% url 'upload_file' %}" method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Upload</button>
+    <input type="file" name="file" required>
+    <button type="submit">Upload File</button>
 </form>
+
+{% if success %}
+    <p style="color:green;">File uploaded successfully!</p>
+{% endif %}

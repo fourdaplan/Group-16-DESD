@@ -46,12 +46,10 @@
         #success-message {
             color: green;
             margin-top: 20px;
-            display: none;
         }
         #error-message {
             color: red;
             margin-top: 20px;
-            display: none;
         }
         #description {
             margin-top: 20px;
@@ -65,46 +63,20 @@
 <h2>Upload a File to Receive a Prediction</h2>
 <div id="upload-section">
     <h3>Upload File (Image, Text, Audio, Video)</h3>
-    <form id="uploadForm">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
         <input type="file" name="file" id="fileInput">
         <button type="submit">Upload File</button>
     </form>
 
-    <div id="success-message">Document uploaded successfully</div>
-    <div id="error-message">An error occurred. Please try again.</div>
+    {% if success %}
+        <div id="success-message">Document uploaded successfully</div>
+    {% elif error %}
+        <div id="error-message">An error occurred. Please try again.</div>
+    {% endif %}
 </div>
 
 <p id="description">If you upload a file, you will get a prediction using our AI model.</p>
-
-<script>
-    document.getElementById('uploadForm').onsubmit = function(event) {
-        event.preventDefault();
-        const formData = new FormData();
-        const fileInput = document.getElementById('fileInput');
-        if (fileInput.files.length === 0) {
-            alert("Please select a file");
-            return;
-        }
-        formData.append("file", fileInput.files[0]);
-
-        fetch('/upload/', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message === 'Document uploaded successfully') {
-                document.getElementById('success-message').style.display = 'block';
-                document.getElementById('error-message').style.display = 'none';
-            } else {
-                document.getElementById('error-message').style.display = 'block';
-            }
-        })
-        .catch(() => {
-            document.getElementById('error-message').style.display = 'block';
-        });
-    };
-</script>
 
 </body>
 </html>
