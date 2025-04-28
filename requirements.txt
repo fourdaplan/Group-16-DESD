@@ -6,3 +6,5 @@ fastapi
 pydantic
 mysqlclient
 python-dotenv
+tensorflow
+scikit-learn
