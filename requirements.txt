@@ -8,6 +8,3 @@ mysqlclient
 python-dotenv
 tensorflow
 scikit-learn
-joblib
-matplotlib
-uvicorn
