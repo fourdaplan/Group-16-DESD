@@ -9,6 +9,7 @@ services:
     command: sh -c "sleep 15 && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./backend:/code
+      - ./mlaas_service:/code/mlaas_service
     ports:
       - "8000:8000"
     depends_on:

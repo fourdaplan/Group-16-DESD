@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'end_user_panel',
     'model_manager',
     'dashboard',
+    'mlaas_service',
 ]
 
 MIDDLEWARE = [

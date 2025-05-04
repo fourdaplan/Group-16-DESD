@@ -14,6 +14,8 @@ urlpatterns = [
     path('api/models/', include('model_manager.urls')),
     path('api/end-user/', include('end_user_panel.urls')),
     path('api/admin/', include('admin_panel.urls')),
+    path('api/core-model/', include('mlaas_service.urls')),
+
 
     # User-facing Dashboards
     path('end-user-dashboard/', dashboard_views.end_user_dashboard, name='end_user_dashboard'),

@@ -1,4 +1,0 @@
-age,gender,income,injury_type,prognosis,claim_amount
-25,Male,30000,Whiplash,2 weeks,2000
-45,Female,45000,Fracture,12 weeks,8000
-30,Male,50000,Back Injury,8 weeks,6000
