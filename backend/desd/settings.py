@@ -74,11 +74,17 @@ WSGI_APPLICATION = 'desd.wsgi.application'
 # Database configuration (MySQL)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('MYSQL_DATABASE', 'mlaas_db'),
+        'USER': os.getenv('MYSQL_USER', 'mlaas_user'),
+        'PASSWORD': os.getenv('MYSQL_PASSWORD', 'mlaas_user_pass'),
+        'HOST': 'mysql',  # this must match the mysql service name in docker-compose
+        'PORT': '3306',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
-
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

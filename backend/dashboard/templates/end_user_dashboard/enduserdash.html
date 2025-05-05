@@ -70,10 +70,24 @@
     </form>
 
     {% if success %}
-        <div id="success-message">Document uploaded successfully</div>
-    {% elif error %}
-        <div id="error-message">An error occurred. Please try again.</div>
+    <div id="success-message">Document uploaded successfully</div>
+
+    {% if prediction %}
+    <div id="success-message">
+        Prediction: £{{ prediction }} <br>
+        Group: {{ group }}
+    </div>
+{% endif %}
+
+
+    {% if group %}
+        <div style="margin-top: 5px;">
+            <strong>Group:</strong> {{ group }}
+        </div>
     {% endif %}
+{% elif error %}
+    <div id="error-message">An error occurred. Please try again.</div>
+{% endif %}
 </div>
 
 <p id="description">If you upload a file, you will get a prediction using our AI model.</p>

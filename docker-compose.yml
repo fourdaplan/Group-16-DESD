@@ -13,10 +13,10 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     env_file:
       - .env
-
 
   mlaas:
     build:
@@ -28,7 +28,7 @@ services:
       - ./mlaas_service:/app
       - ./backend/media/ai_models:/app/models
     environment:
-      - MODEL_PATH=models/active_model.pkl
+      - MODEL_PATH=models/best_model_xgboost.joblib
 
   mysql:
     container_name: database-container-3
@@ -43,6 +43,11 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   nginx:
     image: nginx:latest
@@ -57,4 +62,3 @@ services:
 
 volumes:
   mysql-data:
-

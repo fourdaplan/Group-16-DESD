@@ -8,3 +8,7 @@ mysqlclient
 python-dotenv
 tensorflow
 scikit-learn
+pymysql
+django-cors-headers
+xgboost
+cryptography

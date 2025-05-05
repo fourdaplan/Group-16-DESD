@@ -1,25 +1,28 @@
-# mlaas_service/views.py
-
-import pandas as pd
+import os
+from django.conf import settings
 from joblib import load
+import pandas as pd
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 
-scaler = load("mlaas_service/models/core_model/scaler.joblib")
-classifier = load("mlaas_service/models/core_model/group_classifier.joblib")
+MODEL_DIR = os.path.join(settings.MEDIA_ROOT, "ai_models")
 
-@api_view(['POST'])
+preprocessor = load(os.path.join(MODEL_DIR, "preprocessor.joblib"))
+kmeans = load(os.path.join(MODEL_DIR, "kmeans_cluster.joblib"))
+model = load(os.path.join(MODEL_DIR, "best_model_xgboost.joblib"))
+
+@api_view(["POST"])
 def predict_settlement(request):
+    print("🔍 Received prediction request:", request.data)  # Add this line
+
     data = request.data
     df = pd.DataFrame([data])
-
-    X_scaled = scaler.transform(df)
-    group = classifier.predict(X_scaled)[0]
-
-    model = load(f"mlaas_service/models/core_model/group_{group}_regressor.joblib")
-    prediction = model.predict(X_scaled)[0]
+    
+    df_transformed = preprocessor.transform(df)
+    cluster = kmeans.predict(df_transformed)[0]
+    prediction = model.predict(np.hstack((df_transformed, [[cluster]])))[0]
 
     return JsonResponse({
         "predicted_settlement_gbp": round(prediction, 2),
-        "group": int(group)
+        "cluster": int(cluster)
     })
