@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -72,11 +74,20 @@
 
 <h2>AI Engineer Dashboard</h2>
 <div id="dashboard">
-    <h3>Upload Trained ML Model</h3>
-    <form id="modelUploadForm">
+    <h3>Upload Trained ML Model and Artifacts</h3>
+    <form id="modelUploadForm" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
         <input type="text" name="name" placeholder="Model Name" required>
         <textarea name="description" placeholder="Model Description (optional)"></textarea>
-        <input type="file" name="model_file" id="modelFile" required>
+        <input type="file" name="model_file" required>
+
+        <!-- Optional fields -->
+        <input type="file" name="preprocessor_file" placeholder="Preprocessor File (.joblib)">
+        <input type="file" name="cluster_model_file" placeholder="Cluster Model File (.joblib)">
+        <input type="number" step="any" name="r2_score" placeholder="R² Score (optional)">
+        <input type="number" step="any" name="rmse" placeholder="RMSE (optional)">
+
         <button type="submit">Upload Model</button>
     </form>
 
@@ -84,7 +95,7 @@
     <div id="error-message">An error occurred. Please try again.</div>
 </div>
 
-<p id="description">Upload your trained model (e.g. .pkl or .joblib) to integrate it into the MLAAS platform.</p>
+<p id="description">Upload your trained model (.joblib), preprocessor and cluster model files with optional performance metrics.</p>
 
 <script>
     document.getElementById('modelUploadForm').onsubmit = function(event) {
@@ -92,17 +103,18 @@
         const form = event.target;
         const formData = new FormData(form);
 
-        fetch('/api/models/models/', {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch('/api/models/', {
             method: 'POST',
             headers: {
-                // 'Authorization': 'Bearer <your_token>' // Add token if using auth
+                'X-CSRFToken': csrfToken
             },
-            body: formData
+            body: formData,
+            credentials: 'include'
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error("Upload failed");
-            }
+            if (!response.ok) throw new Error("Upload failed");
             return response.json();
         })
         .then(data => {

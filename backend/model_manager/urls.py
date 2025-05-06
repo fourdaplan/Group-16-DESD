@@ -1,10 +1,14 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import UploadedModelViewSet
-
-router = DefaultRouter()
-router.register(r'models', UploadedModelViewSet)
+from django.urls import path
+from .views import (
+    UploadedModelListCreateView,
+    UploadedModelDetailView,
+    UserModelListView,
+    ActivateModelView
+)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('', UploadedModelListCreateView.as_view(), name='model-list-create'),
+    path('<int:pk>/', UploadedModelDetailView.as_view(), name='model-detail'),
+    path('my-models/', UserModelListView.as_view(), name='user-models'),
+    path('activate/<int:pk>/', ActivateModelView.as_view(), name='activate-model'),
 ]

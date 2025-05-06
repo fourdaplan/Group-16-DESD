@@ -4,7 +4,7 @@ from joblib import load
 import pandas as pd
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
-
+import numpy as np
 MODEL_DIR = os.path.join(settings.MEDIA_ROOT, "ai_models")
 
 preprocessor = load(os.path.join(MODEL_DIR, "preprocessor.joblib"))
