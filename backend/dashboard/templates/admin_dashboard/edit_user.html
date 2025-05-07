@@ -1,0 +1,22 @@
+<!-- admin_panel/templates/admin_panel/edit_user.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit User</title>
+    <style>
+        body { font-family: Arial; margin: 30px; }
+        form { max-width: 400px; }
+        label, input { display: block; margin: 10px 0; }
+        button { background-color: #4CAF50; color: white; padding: 8px 16px; border: none; }
+    </style>
+</head>
+<body>
+<h2>Edit User - {{ user_obj.username }}</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save</button>
+</form>
+</body>
+</html>
