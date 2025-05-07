@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Activity Logs</title>
+</head>
+<body>
+    <h2>📜 Admin Activity Logs</h2>
+    <ul>
+        {% for log in logs %}
+            <li>{{ log.timestamp }} — {{ log.user.username }}: {{ log.action }}</li>
+        {% empty %}
+            <li>No logs found</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'admin_dashboard' %}">⬅️ Back to Dashboard</a>
+</body>
+</html>

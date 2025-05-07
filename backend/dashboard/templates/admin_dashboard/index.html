@@ -12,11 +12,6 @@
     h2, h3 {
       color: #333;
     }
-    input, button {
-      padding: 10px;
-      margin: 5px;
-      font-size: 16px;
-    }
     table {
       border-collapse: collapse;
       width: 100%;
@@ -33,26 +28,94 @@
       background-color: #4CAF50;
       color: white;
     }
-    #log-section {
-      display: none;
-      margin-top: 30px;
+    .section {
+      margin-bottom: 40px;
     }
-    #error-message {
-      color: red;
-      margin-top: 10px;
+    .button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 6px 12px;
+      text-decoration: none;
+      border-radius: 4px;
     }
   </style>
 </head>
 <body>
 
-  <h2>Admin Login</h2>
-  <input type="text" id="username" placeholder="Username"><br>
-  <input type="password" id="password" placeholder="Password"><br>
-  <button onclick="login()">Login</button>
-  <div id="error-message"></div>
+  <h2>Admin Dashboard</h2>
 
-  <div id="log-section">
-    <h3>Activity Logs</h3>
+  <div class="section">
+    <h3>Pending AI Engineer Approvals</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Approve</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in pending_engineers %}
+          <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td><a href="{% url 'approve_engineer' user.id %}" class="button">Approve</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3">No pending engineers.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>Recent Model Uploads</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Model Name</th>
+          <th>User</th>
+          <th>Upload Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for model in recent_uploads %}
+          <tr>
+            <td>{{ model.name }}</td>
+            <td>{{ model.user.username }}</td>
+            <td>{{ model.uploaded_at }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3">No uploads found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>Recent Predictions</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in recent_predictions %}
+          <tr>
+            <td>{{ item.model.name }}</td>
+            <td>{{ item.timestamp }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="2">No predictions yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>Recent Activity Logs</h3>
     <table>
       <thead>
         <tr>
@@ -61,45 +124,19 @@
           <th>Timestamp</th>
         </tr>
       </thead>
-      <tbody id="log-table"></tbody>
+      <tbody>
+        {% for log in logs %}
+          <tr>
+            <td>{{ log.user.username }}</td>
+            <td>{{ log.action }}</td>
+            <td>{{ log.timestamp }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3">No activity logged yet.</td></tr>
+        {% endfor %}
+      </tbody>
     </table>
   </div>
 
-  <script>
-    function login() {
-      const user = document.getElementById('username').value;
-      const pass = document.getElementById('password').value;
-      const errorBox = document.getElementById('error-message');
-
-      fetch('http://localhost:8000/api/admin/logs/', {
-        headers: {
-          'Authorization': 'Basic ' + btoa(user + ':' + pass)
-        }
-      })
-      .then(response => {
-        if (response.status === 401 || response.status === 403) {
-          errorBox.textContent = 'Access denied: You must be an admin and logged in.';
-          return null;
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data) {
-          document.getElementById('log-section').style.display = 'block';
-          errorBox.textContent = '';
-          const table = document.getElementById('log-table');
-          table.innerHTML = '';
-          data.forEach(log => {
-            const row = `<tr><td>${log.user}</td><td>${log.action}</td><td>${log.timestamp}</td></tr>`;
-            table.innerHTML += row;
-          });
-        }
-      })
-      .catch(error => {
-        errorBox.textContent = 'Login failed or server error.';
-        console.error(error);
-      });
-    }
-  </script>
 </body>
 </html>

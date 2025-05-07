@@ -12,3 +12,4 @@ urlpatterns = [
     path('my-models/', UserModelListView.as_view(), name='user-models'),
     path('activate/<int:pk>/', ActivateModelView.as_view(), name='activate-model'),
 ]
+

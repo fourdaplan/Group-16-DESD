@@ -14,7 +14,7 @@ def custom_login(request):
 
             # Role-based redirection
             if user.is_superuser:
-                return redirect('/admin/')
+                return redirect('admin_dashboard')
             elif user.groups.filter(name='AI Engineer').exists():
                 return redirect('/ai-dashboard/')
             elif user.groups.filter(name='end users').exists():

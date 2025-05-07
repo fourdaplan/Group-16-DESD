@@ -15,7 +15,12 @@ class UploadedModelListCreateView(generics.ListCreateAPIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def perform_create(self, serializer):
+        print(f"[DEBUG] Saving model for user: {self.request.user}")  # This should appear
         serializer.save(user=self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        print("[DEBUG] POST request received in UploadedModelListCreateView")
+        return super().post(request, *args, **kwargs)
 
 
 class UploadedModelDetailView(generics.RetrieveUpdateDestroyAPIView):
