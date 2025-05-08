@@ -21,8 +21,6 @@ def custom_login(request):
                 return redirect('/end-user-dashboard/')
             elif user.groups.filter(name='Finance').exists():
                 return redirect('/finance-dashboard/')
-            else:
-                return redirect('/main-dashboard/')
 
         else:
             return render(request, 'login_dashboard/login.html', {'error': 'Invalid credentials'})

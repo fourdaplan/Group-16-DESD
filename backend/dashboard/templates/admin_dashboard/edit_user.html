@@ -2,21 +2,148 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Edit User</title>
-    <style>
-        body { font-family: Arial; margin: 30px; }
-        form { max-width: 400px; }
-        label, input { display: block; margin: 10px 0; }
-        button { background-color: #4CAF50; color: white; padding: 8px 16px; border: none; }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Edit User</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(to bottom right, #e0e5ec, #ffffff);
+      background-attachment: fixed;
+      padding: 40px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before, body::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: 0;
+    }
+
+    body::before {
+      width: 500px;
+      height: 500px;
+      background: rgba(0, 122, 255, 0.15);
+      top: -100px;
+      left: -100px;
+    }
+
+    body::after {
+      width: 600px;
+      height: 600px;
+      background: rgba(255, 45, 85, 0.1);
+      bottom: -150px;
+      right: -150px;
+    }
+
+    h2 {
+      color: #222;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    form.section {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+    }
+
+    label {
+      margin-top: 15px;
+      font-weight: 500;
+      display: block;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+    }
+
+    .permissions-box {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-top: 10px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+    }
+
+    .permissions-box label {
+      font-weight: normal;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .button {
+      background-color: #007aff;
+      color: white;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: background 0.3s ease;
+      display: inline-block;
+      border: none;
+      margin-top: 20px;
+    }
+
+    .button:hover {
+      background-color: #005fcb;
+    }
+  </style>
 </head>
 <body>
-<h2>Edit User - {{ user_obj.username }}</h2>
-<form method="post">
+  <h2>Edit User - {{ user_obj.username }}</h2>
+
+  <form method="post" class="section">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Save</button>
-</form>
+
+    <!-- ✅ Group Selection -->
+    <label for="group">Role / Group:</label>
+    <select name="group" id="group">
+      {% for group in groups %}
+        <option value="{{ group.id }}" {% if group.id in user_group_ids %}selected{% endif %}>
+          {{ group.name }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <!-- ✅ Permissions -->
+    <label>User Permissions:</label>
+    <div class="permissions-box">
+      {% for perm in permissions %}
+        <label>
+          <input type="checkbox" name="perms" value="{{ perm.id }}"
+                 {% if perm.id in user_permission_ids %}checked{% endif %}>
+          {{ perm.name }}
+        </label>
+      {% endfor %}
+    </div>
+
+    <button type="submit" class="button">Save</button>
+  </form>
 </body>
 </html>
