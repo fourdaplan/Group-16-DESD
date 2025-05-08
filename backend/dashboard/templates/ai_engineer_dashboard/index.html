@@ -1,5 +1,4 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,9 +65,10 @@
       border-radius: 16px;
       padding: 30px;
       width: 100%;
-      max-width: 500px;
+      max-width: 600px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
       text-align: center;
+      margin-bottom: 40px;
     }
 
     h3 {
@@ -125,16 +125,41 @@
       text-align: center;
     }
 
-    @media (max-width: 600px) {
-      #dashboard {
-        padding: 20px;
-      }
+    .feedback-section {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(15px);
+      padding: 20px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+      text-align: left;
+    }
+
+    .feedback-card {
+      padding: 15px;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .feedback-card:last-child {
+      border-bottom: none;
+    }
+
+    .feedback-user {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .feedback-text {
+      color: #333;
     }
   </style>
 </head>
 <body>
 
 <h2>AI Engineer Dashboard</h2>
+
 <div id="dashboard">
   <h3>Upload Trained ML Model and Artifacts</h3>
   <form id="modelUploadForm" method="POST" enctype="multipart/form-data">
@@ -151,6 +176,13 @@
 
   <div id="success-message">✅ Model uploaded successfully!</div>
   <div id="error-message">❌ An error occurred. Please try again.</div>
+</div>
+
+<div class="feedback-section">
+  <h3>📢 User Feedback</h3>
+  <div id="feedbackContainer">
+    <p>Loading feedback...</p>
+  </div>
 </div>
 
 <p id="description">
@@ -183,6 +215,32 @@
       document.getElementById('error-message').style.display = 'block';
     });
   };
+
+  // Fetch and display feedback
+  fetch('/api/models/feedback/')
+    .then(response => response.json())
+    .then(data => {
+      const container = document.getElementById('feedbackContainer');
+      container.innerHTML = '';
+
+      if (data.length === 0) {
+        container.innerHTML = '<p>No feedback yet.</p>';
+      } else {
+        data.forEach(feedback => {
+          const card = document.createElement('div');
+          card.className = 'feedback-card';
+          card.innerHTML = `
+            <div class="feedback-user">👤 ${feedback.user}</div>
+            <div class="feedback-text">"${feedback.feedback}"</div>
+            <div style="font-size:12px; color:gray;">File: ${feedback.file_name} | Uploaded: ${feedback.uploaded_at}</div>
+          `;
+          container.appendChild(card);
+        });
+      }
+    })
+    .catch(error => {
+      console.error('Error loading feedback:', error);
+    });
 </script>
 
 </body>
