@@ -1,12 +1,13 @@
 from rest_framework import generics, permissions
 from rest_framework.parsers import MultiPartParser, FormParser
-from .models import UploadedModel
-from .serializers import UploadedModelSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.auth.models import User
 from rest_framework import status
+from django.contrib.auth.models import User
 
+from .models import UploadedModel
+from end_user_panel.models import UploadedFile
+from .serializers import UploadedModelSerializer
 
 class UploadedModelListCreateView(generics.ListCreateAPIView):
     queryset = UploadedModel.objects.all()
@@ -15,11 +16,9 @@ class UploadedModelListCreateView(generics.ListCreateAPIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def perform_create(self, serializer):
-        print(f"[DEBUG] Saving model for user: {self.request.user}")  # This should appear
         serializer.save(user=self.request.user)
 
     def post(self, request, *args, **kwargs):
-        print("[DEBUG] POST request received in UploadedModelListCreateView")
         return super().post(request, *args, **kwargs)
 
 
@@ -51,3 +50,19 @@ class ActivateModelView(APIView):
             return Response({"message": "Model activated successfully."})
         except UploadedModel.DoesNotExist:
             return Response({"error": "Model not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+# NEW: Feedback listing view
+class FeedbackListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        feedbacks = UploadedFile.objects.filter(feedback__isnull=False).order_by('-uploaded_at')
+        feedback_data = [{
+            "user": feedback.user.username,
+            "file_name": feedback.file.name,
+            "uploaded_at": feedback.uploaded_at,
+            "feedback": feedback.feedback
+        } for feedback in feedbacks]
+
+        return Response(feedback_data)
