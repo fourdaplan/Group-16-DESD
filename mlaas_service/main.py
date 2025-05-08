@@ -53,12 +53,12 @@ class ClaimInput(BaseModel):
 # ✅ Step 2: Prediction endpoint
 @app.post("/predict/")
 def predict_settlement(input: ClaimInput):
-    data = input.dict()
+    data = input.model_dump()  # Pydantic v2 compatible
     df = pd.DataFrame([data])
 
     # ✅ Step 3: Rename to match training feature names
     rename_map = {
-        'accident_type': 'Accident Type',
+        'accident_type': 'AccidentType',  # ✅ Updated to match model
         'injury_prognosis': 'Injury_Prognosis',
         'special_health_expenses': 'SpecialHealthExpenses',
         'special_reduction': 'SpecialReduction',
@@ -107,19 +107,19 @@ def predict_settlement(input: ClaimInput):
     df['Description_Length'] = df['Accident Description'].apply(lambda x: len(str(x).split()))
     df['Injury Description'] = df['Injury Description'].fillna("Missing")
 
-    # ✅ Step 5: Select features for preprocessing
-    X_input = df.rename(columns={
-        'Driver Age': 'age',
-        'Gender': 'gender',
-        'SpecialHealthExpenses': 'income',
-        'prognosis_weeks': 'prognosis_weeks',
-        'Injury Description': 'Injury Description',
-        'Description_Length': 'Description_Length'
-    })
+    # ✅ Step 5: Add placeholder column expected by preprocessor
+    df['Days_To_Claim'] = 0  # if not available, default to 0
 
-    X_input = X_input[['age', 'gender', 'income', 'prognosis_weeks', 'Injury Description', 'Description_Length']]
+    # ✅ Step 6: Use full feature set
+    X_input = df.copy()
 
-    # ✅ Step 6: Preprocess, Cluster, Predict
+    # Optional sanity check
+    required_columns = getattr(preprocessor, "feature_names_in_", [])
+    missing = set(required_columns) - set(X_input.columns)
+    if missing:
+        raise ValueError(f"❌ Missing columns for preprocessing: {missing}")
+
+    # ✅ Step 7: Preprocess, Cluster, Predict
     X_transformed = preprocessor.transform(X_input)
     cluster = kmeans.predict(X_transformed)[0]
     X_final = np.hstack((X_transformed, [[cluster]]))
