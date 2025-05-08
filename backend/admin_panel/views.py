@@ -26,6 +26,10 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
 # ✅ Admin Dashboard View
 @user_passes_test(lambda u: u.is_superuser)
 def admin_dashboard(request):
+    # ✅ Set session role if not already set
+    if request.session.get('role') != 'admin':
+        request.session['role'] = 'admin'
+
     try:
         engineers_group = Group.objects.get(name='AI Engineer')
         pending_engineers = User.objects.filter(groups=engineers_group, is_active=False)
@@ -34,7 +38,7 @@ def admin_dashboard(request):
 
     recent_uploads = UploadedModel.objects.select_related('user') \
         .filter(user__isnull=False) \
-        .order_by('-uploaded_at')
+        .order_by('-uploaded_at')[:5]
 
     print("🟢 DEBUG: recent_uploads count =", recent_uploads.count())
     for model in recent_uploads:
@@ -44,7 +48,7 @@ def admin_dashboard(request):
             print(f" - {model.name} with NO USER ❌")
 
     recent_predictions = Interaction.objects.all().order_by('-timestamp')[:5]
-    logs = ActivityLog.objects.all().order_by('-timestamp')[:10]
+    logs = ActivityLog.objects.all().order_by('-timestamp')[:5]
 
     log_activity(request.user, "Accessed admin dashboard")
 
@@ -54,6 +58,7 @@ def admin_dashboard(request):
         'recent_predictions': recent_predictions,
         'logs': logs,
     })
+
 
 # ✅ Approve AI Engineer
 @user_passes_test(lambda u: u.is_superuser)

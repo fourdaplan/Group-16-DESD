@@ -1,3 +1,4 @@
+<!-- admin_dashboard/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -110,6 +111,12 @@
 <body>
 
   <h2>Admin Dashboard</h2>
+
+  {% if request.session.role %}
+    <p style="margin-bottom: 20px; font-size: 14px; color: #444;">
+      Logged in as: <strong>{{ request.session.role|capfirst }}</strong>
+    </p>
+  {% endif %}
 
   <div class="section">
     <h3>User & Permission Management</h3>

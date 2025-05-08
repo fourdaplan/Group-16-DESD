@@ -53,7 +53,7 @@
       font-size: 28px;
       font-weight: 600;
       color: #111;
-      margin-bottom: 25px;
+      margin-bottom: 10px;
       z-index: 1;
       position: relative;
     }
@@ -159,6 +159,12 @@
 <body>
 
 <h2>AI Engineer Dashboard</h2>
+
+{% if request.session.role %}
+  <p style="margin-bottom: 25px; font-size: 14px; color: #444;">
+    Logged in as: <strong>{{ request.session.role|capfirst }}</strong>
+  </p>
+{% endif %}
 
 <div id="dashboard">
   <h3>Upload Trained ML Model and Artifacts</h3>

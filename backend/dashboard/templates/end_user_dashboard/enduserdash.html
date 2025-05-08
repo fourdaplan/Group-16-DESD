@@ -134,6 +134,12 @@
 
 <h2>Upload a File to Receive a Prediction</h2>
 
+{% if request.session.role %}
+  <p style="margin-bottom: 20px; font-size: 14px; color: #444;">
+    Logged in as: <strong>{{ request.session.role|capfirst }}</strong>
+  </p>
+{% endif %}
+
 <div class="upload-card">
   <h3>Upload File (Image, Text, Audio, Video)</h3>
   <form method="post" enctype="multipart/form-data">
@@ -170,7 +176,6 @@
     <input type="hidden" name="feedback_only" value="1">
     <button type="submit">Submit Feedback</button>
   </form>
-
 </div>
 
 {% if uploaded_files %}

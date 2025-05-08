@@ -2,9 +2,10 @@ import csv
 import io
 import requests
 from django.shortcuts import render
-from .models import UploadedFile
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
+from .models import UploadedFile
+from admin_panel.utils import log_activity  # ✅ Import logging utility
 
 
 def clean_csv_record(record):
@@ -48,10 +49,14 @@ def upload_file_view(request):
     error = None
     success_message = None
 
+    # ✅ Set session role if user belongs to end user group
+    if request.user.groups.filter(name='end users').exists():
+        request.session['role'] = 'end_user'
+
     uploaded_files = UploadedFile.objects.filter(user=request.user).order_by('-uploaded_at')
 
     if request.method == 'POST':
-        # Check for feedback submission
+        # ✅ Feedback submission
         if request.POST.get("feedback_only"):
             feedback_text = request.POST.get("feedback")
             latest_file = UploadedFile.objects.filter(user=request.user).order_by('-uploaded_at').first()
@@ -60,6 +65,7 @@ def upload_file_view(request):
                 latest_file.feedback = feedback_text
                 latest_file.save()
                 success_message = "✅ Feedback submitted successfully!"
+                log_activity(request.user, f"Submitted feedback: \"{feedback_text}\"")  # ✅ Log feedback
             else:
                 error = "❌ No uploaded file to attach feedback to."
 
@@ -72,7 +78,7 @@ def upload_file_view(request):
                 'success_message': success_message if not error else None
             })
 
-        # Handle file upload
+        # ✅ File upload for prediction
         uploaded_file = request.FILES.get('file')
 
         if uploaded_file:
@@ -87,6 +93,7 @@ def upload_file_view(request):
                     file_type=file_type,
                     user=request.user
                 )
+                log_activity(request.user, f"Uploaded file: {uploaded_file.name}")  # ✅ Log upload
 
                 reader = csv.DictReader(io.StringIO(file_data))
                 record = next(reader)
@@ -99,7 +106,6 @@ def upload_file_view(request):
                     'uploaded_files': uploaded_files
                 })
 
-            # Prediction API Call
             try:
                 response = requests.post('http://mlaas-service:9000/predict/', json=cleaned_record)
                 if response.status_code == 200:
@@ -110,6 +116,9 @@ def upload_file_view(request):
                     uploaded_file_obj.predicted_settlement = prediction
                     uploaded_file_obj.cluster = group
                     uploaded_file_obj.save()
+
+                    log_activity(request.user, f"Prediction made: £{prediction}, Cluster: {group}")  # ✅ Log prediction
+
                 else:
                     error = f"API Error: {response.status_code}"
             except Exception as e:
