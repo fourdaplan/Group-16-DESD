@@ -4,3 +4,5 @@ scikit-learn
 joblib
 pydantic
 pymysql
+pandas
+numpy
