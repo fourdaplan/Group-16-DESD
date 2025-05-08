@@ -63,7 +63,7 @@
       margin-bottom: 20px;
     }
 
-    input, button {
+    input, button, textarea {
       padding: 12px;
       margin: 10px 0;
       font-size: 16px;
@@ -74,6 +74,10 @@
 
     input[type="file"] {
       background-color: #f0f0f0;
+    }
+
+    textarea {
+      resize: vertical;
     }
 
     button {
@@ -140,7 +144,7 @@
 
   {% if success %}
     <div id="success-message">✅ Document uploaded successfully</div>
-    
+
     {% if prediction %}
       <div style="margin-top: 10px;">
         <strong>🔮 Prediction:</strong> £{{ prediction }}<br>
@@ -152,6 +156,21 @@
   {% if error %}
     <div id="error-message">❌ {{ error }}</div>
   {% endif %}
+
+  {% if success_message %}
+    <div id="success-message">{{ success_message }}</div>
+  {% endif %}
+
+  <hr style="margin: 20px 0;">
+
+  <h3>📢 Submit Feedback about Prediction</h3>
+  <form method="post">
+    {% csrf_token %}
+    <textarea name="feedback" rows="4" placeholder="Enter your feedback here..." required></textarea>
+    <input type="hidden" name="feedback_only" value="1">
+    <button type="submit">Submit Feedback</button>
+  </form>
+
 </div>
 
 {% if uploaded_files %}
@@ -160,6 +179,9 @@
     <ul>
       {% for file in uploaded_files %}
         <li>{{ file.file.name }} — {{ file.uploaded_at }}</li>
+        {% if file.feedback %}
+          <div style="color: #007aff; font-size: 13px;">Feedback: "{{ file.feedback }}"</div>
+        {% endif %}
       {% endfor %}
     </ul>
   </div>
