@@ -3,129 +3,186 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>AI Engineer Dashboard - Upload ML Models</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            text-align: center;
-        }
+  <meta charset="UTF-8">
+  <title>AI Engineer Dashboard - Upload ML Models</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
 
-        #dashboard {
-            padding: 20px;
-            background-color: #fff;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            width: 500px;
-        }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(to bottom right, #e0e5ec, #ffffff);
+      background-attachment: fixed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+      padding: 40px;
+    }
 
-        h2, h3 {
-            color: #333;
-        }
+    body::before, body::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: 0;
+    }
 
-        input, textarea, button {
-            padding: 10px;
-            margin: 10px 0;
-            font-size: 16px;
-            width: 100%;
-        }
+    body::before {
+      width: 500px;
+      height: 500px;
+      background: rgba(0, 122, 255, 0.2);
+      top: -100px;
+      left: -100px;
+    }
 
-        button {
-            background-color: #333;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: 0.3s;
-            border-radius: 5px;
-        }
+    body::after {
+      width: 600px;
+      height: 600px;
+      background: rgba(255, 45, 85, 0.15);
+      bottom: -150px;
+      right: -150px;
+    }
 
-        button:hover {
-            background-color: #555;
-        }
+    h2 {
+      font-size: 28px;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 25px;
+      z-index: 1;
+      position: relative;
+    }
 
-        #success-message {
-            color: green;
-            margin-top: 20px;
-            display: none;
-        }
+    #dashboard {
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(15px);
+      border-radius: 16px;
+      padding: 30px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
 
-        #error-message {
-            color: red;
-            margin-top: 20px;
-            display: none;
-        }
+    h3 {
+      color: #333;
+      margin-bottom: 20px;
+    }
 
-        #description {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #555;
-        }
-    </style>
+    input,
+    textarea,
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+      border-radius: 10px;
+      border: none;
+      background: #f4f4f4;
+      outline: none;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    button {
+      background-color: #007aff;
+      color: white;
+      font-weight: 600;
+      transition: background 0.3s ease;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #005fe0;
+    }
+
+    #success-message {
+      color: green;
+      margin-top: 20px;
+      display: none;
+    }
+
+    #error-message {
+      color: red;
+      margin-top: 20px;
+      display: none;
+    }
+
+    #description {
+      margin-top: 25px;
+      font-size: 14px;
+      color: #555;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      #dashboard {
+        padding: 20px;
+      }
+    }
+  </style>
 </head>
 <body>
 
 <h2>AI Engineer Dashboard</h2>
 <div id="dashboard">
-    <h3>Upload Trained ML Model and Artifacts</h3>
-    <form id="modelUploadForm" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        
-        <input type="text" name="name" placeholder="Model Name" required>
-        <textarea name="description" placeholder="Model Description (optional)"></textarea>
-        <input type="file" name="model_file" required>
+  <h3>Upload Trained ML Model and Artifacts</h3>
+  <form id="modelUploadForm" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="text" name="name" placeholder="Model Name" required>
+    <textarea name="description" placeholder="Model Description (optional)"></textarea>
+    <input type="file" name="model_file" required>
+    <input type="file" name="preprocessor_file" placeholder="Preprocessor File (.joblib)">
+    <input type="file" name="cluster_model_file" placeholder="Cluster Model File (.joblib)">
+    <input type="number" step="any" name="r2_score" placeholder="R² Score (optional)">
+    <input type="number" step="any" name="rmse" placeholder="RMSE (optional)">
+    <button type="submit">Upload Model</button>
+  </form>
 
-        <!-- Optional fields -->
-        <input type="file" name="preprocessor_file" placeholder="Preprocessor File (.joblib)">
-        <input type="file" name="cluster_model_file" placeholder="Cluster Model File (.joblib)">
-        <input type="number" step="any" name="r2_score" placeholder="R² Score (optional)">
-        <input type="number" step="any" name="rmse" placeholder="RMSE (optional)">
-
-        <button type="submit">Upload Model</button>
-    </form>
-
-    <div id="success-message">Model uploaded successfully!</div>
-    <div id="error-message">An error occurred. Please try again.</div>
+  <div id="success-message">✅ Model uploaded successfully!</div>
+  <div id="error-message">❌ An error occurred. Please try again.</div>
 </div>
 
-<p id="description">Upload your trained model (.joblib), preprocessor and cluster model files with optional performance metrics.</p>
+<p id="description">
+  Upload your trained model (.joblib), preprocessor and cluster model files with optional performance metrics.
+</p>
 
 <script>
-    document.getElementById('modelUploadForm').onsubmit = function(event) {
-        event.preventDefault();
-        const form = event.target;
-        const formData = new FormData(form);
+  document.getElementById('modelUploadForm').onsubmit = function(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-        fetch('/api/models/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken
-            },
-            body: formData,
-            credentials: 'include'
-        })
-        .then(response => {
-            if (!response.ok) throw new Error("Upload failed");
-            return response.json();
-        })
-        .then(data => {
-            document.getElementById('success-message').style.display = 'block';
-            document.getElementById('error-message').style.display = 'none';
-            form.reset();
-        })
-        .catch(() => {
-            document.getElementById('error-message').style.display = 'block';
-        });
-    };
+    fetch('/api/models/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrfToken },
+      body: formData,
+      credentials: 'include'
+    })
+    .then(response => {
+      if (!response.ok) throw new Error("Upload failed");
+      return response.json();
+    })
+    .then(data => {
+      document.getElementById('success-message').style.display = 'block';
+      document.getElementById('error-message').style.display = 'none';
+      form.reset();
+    })
+    .catch(() => {
+      document.getElementById('error-message').style.display = 'block';
+    });
+  };
 </script>
 
 </body>

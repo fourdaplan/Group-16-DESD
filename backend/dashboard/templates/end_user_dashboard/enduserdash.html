@@ -1,99 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Upload a File to Receive a Prediction</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            text-align: center;
-        }
-        #upload-section {
-            padding: 20px;
-            background-color: #fff;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            width: 400px;
-        }
-        h2, h3 {
-            color: #333;
-        }
-        input, button {
-            padding: 10px;
-            margin: 10px 0;
-            font-size: 16px;
-            width: 100%;
-        }
-        button {
-            background-color: #333;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: 0.3s;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #555;
-        }
-        #success-message {
-            color: green;
-            margin-top: 20px;
-        }
-        #error-message {
-            color: red;
-            margin-top: 20px;
-        }
-        #description {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #555;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Upload a File to Receive a Prediction</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(to bottom right, #e0e5ec, #ffffff);
+      background-attachment: fixed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    body::before, body::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: 0;
+    }
+
+    body::before {
+      width: 500px;
+      height: 500px;
+      background: rgba(0, 122, 255, 0.2);
+      top: -100px;
+      left: -100px;
+    }
+
+    body::after {
+      width: 600px;
+      height: 600px;
+      background: rgba(255, 45, 85, 0.15);
+      bottom: -150px;
+      right: -150px;
+    }
+
+    .upload-card {
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(15px);
+      border-radius: 16px;
+      padding: 30px;
+      width: 400px;
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+    }
+
+    h2, h3 {
+      color: #111;
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+      width: 100%;
+      border-radius: 10px;
+      border: none;
+    }
+
+    input[type="file"] {
+      background-color: #f0f0f0;
+    }
+
+    button {
+      background-color: #007aff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #005fe0;
+    }
+
+    #success-message {
+      color: green;
+      margin-top: 15px;
+    }
+
+    #error-message {
+      color: red;
+      margin-top: 15px;
+    }
+
+    #description {
+      margin-top: 25px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .uploaded-files {
+      margin-top: 30px;
+      width: 400px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 12px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .uploaded-files ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .uploaded-files li {
+      padding: 6px 0;
+      font-size: 14px;
+      color: #333;
+    }
+  </style>
 </head>
 <body>
 
 <h2>Upload a File to Receive a Prediction</h2>
-<div id="upload-section">
-    <h3>Upload File (Image, Text, Audio, Video)</h3>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="file" name="file" id="fileInput" required>
-        <button type="submit">Upload File</button>
-    </form>
 
-    {% if success %}
-        <div id="success-message">✅ Document uploaded successfully</div>
-        
-        {% if prediction %}
-            <div style="margin-top: 10px;">
-                <strong>🔮 Prediction:</strong> £{{ prediction }}<br>
-                <strong>📊 Cluster Group:</strong> {{ group }}
-            </div>
-        {% endif %}
-    {% endif %}
+<div class="upload-card">
+  <h3>Upload File (Image, Text, Audio, Video)</h3>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="file" id="fileInput" required>
+    <button type="submit">Upload File</button>
+  </form>
 
-    {% if error %}
-        <div id="error-message">❌ {{ error }}</div>
+  {% if success %}
+    <div id="success-message">✅ Document uploaded successfully</div>
+    
+    {% if prediction %}
+      <div style="margin-top: 10px;">
+        <strong>🔮 Prediction:</strong> £{{ prediction }}<br>
+        <strong>📊 Cluster Group:</strong> {{ group }}
+      </div>
     {% endif %}
+  {% endif %}
+
+  {% if error %}
+    <div id="error-message">❌ {{ error }}</div>
+  {% endif %}
 </div>
 
 {% if uploaded_files %}
-    <div style="margin-top: 30px; width: 400px;">
-        <h3>📂 Previously Uploaded Files</h3>
-        <ul style="list-style: none; padding-left: 0;">
-            {% for file in uploaded_files %}
-                <li>{{ file.file.name }} — {{ file.uploaded_at }}</li>
-            {% endfor %}
-        </ul>
-    </div>
+  <div class="uploaded-files">
+    <h3>📂 Previously Uploaded Files</h3>
+    <ul>
+      {% for file in uploaded_files %}
+        <li>{{ file.file.name }} — {{ file.uploaded_at }}</li>
+      {% endfor %}
+    </ul>
+  </div>
 {% endif %}
 
 <p id="description">If you upload a file, you will get a prediction using our AI model.</p>

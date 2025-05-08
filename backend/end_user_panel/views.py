@@ -46,7 +46,7 @@ def upload_file_view(request):
 
             # Call prediction API
             try:
-                response = requests.post('http://mlaas:9000/predict/', json=record)
+                response = requests.post('http://mlaas-service:9000/predict/', json=record)
                 print("📡 Model response:", response.status_code, response.text)
                 if response.status_code == 200:
                     data = response.json()

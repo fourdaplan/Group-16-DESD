@@ -4,40 +4,106 @@
   <meta charset="UTF-8" />
   <title>Admin Dashboard</title>
   <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
+      min-height: 100vh;
+      background: linear-gradient(to bottom right, #e0e5ec, #ffffff);
+      background-attachment: fixed;
+      padding: 40px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before, body::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: 0;
+    }
+
+    body::before {
+      width: 500px;
+      height: 500px;
+      background: rgba(0, 122, 255, 0.15);
+      top: -100px;
+      left: -100px;
+    }
+
+    body::after {
+      width: 600px;
+      height: 600px;
+      background: rgba(255, 45, 85, 0.1);
+      bottom: -150px;
+      right: -150px;
+    }
+
+    h2, h3 {
+      color: #222;
+      margin-bottom: 20px;
+      z-index: 1;
+      position: relative;
+    }
+
+    .section {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      margin-bottom: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+      z-index: 1;
+      position: relative;
+    }
+
+    .button {
+      background-color: #007aff;
+      color: white;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: background 0.3s ease;
+      display: inline-block;
+    }
+
+    .button:hover {
+      background-color: #005fcb;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    th, td {
+      padding: 16px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background-color: #007aff;
+      color: white;
+    }
+
+    tr:nth-child(even) {
       background-color: #f9f9f9;
     }
-    h2, h3 {
-      color: #333;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 20px;
-      background-color: #fff;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid #ddd;
-      text-align: left;
-    }
-    th {
-      background-color: #4CAF50;
-      color: white;
-    }
-    .section {
-      margin-bottom: 40px;
-    }
-    .button {
-      background-color: #4CAF50;
-      color: white;
-      padding: 6px 12px;
-      text-decoration: none;
-      border-radius: 4px;
-      margin-right: 10px;
+
+    tr:nth-child(odd) {
+      background-color: #ffffff;
     }
   </style>
 </head>
@@ -45,7 +111,6 @@
 
   <h2>Admin Dashboard</h2>
 
-  <!-- ✅ NEW: User Management Section -->
   <div class="section">
     <h3>User & Permission Management</h3>
     <a href="{% url 'user_list' %}" class="button">Manage Users</a>

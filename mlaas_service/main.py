@@ -14,92 +14,115 @@ preprocessor = joblib.load(os.path.join(MODEL_DIR, "preprocessor.joblib"))
 kmeans = joblib.load(os.path.join(MODEL_DIR, "kmeans_cluster.joblib"))
 model = joblib.load(os.path.join(MODEL_DIR, "best_model_xgboost.joblib"))
 
-# Define expected input structure
+# ✅ Step 1: Define Pydantic input with clean field names
 class ClaimInput(BaseModel):
-    Accident_Type: str
-    Injury_Prognosis: str
-    SpecialHealthExpenses: float = 0.0
-    SpecialReduction: float = 0.0
-    SpecialOverage: float = 0.0
-    GeneralRest: float = 0.0
-    SpecialAdditionalInjury: float = 0.0
-    SpecialEarningsLoss: float = 0.0
-    SpecialUsageLoss: float = 0.0
-    SpecialMedications: float = 0.0
-    SpecialAssetDamage: float = 0.0
-    SpecialRehabilitation: float = 0.0
-    SpecialFixes: float = 0.0
-    GeneralFixed: float = 0.0
-    GeneralUplift: float = 0.0
-    SpecialLoanerVehicle: float = 0.0
-    SpecialTripCosts: float = 0.0
-    SpecialJourneyExpenses: float = 0.0
-    SpecialTherapy: float = 0.0
-    Exceptional_Circumstances: str
-    Minor_Psychological_Injury: str
-    Dominant_injury: str
-    Whiplash: str
-    Vehicle_Type: str
-    Weather_Conditions: str
-    Vehicle_Age: int = 0
-    Driver_Age: int = 0
-    Number_of_Passengers: int = 0
-    Accident_Description: str
-    Injury_Description: str
-    Police_Report_Filed: str
-    Witness_Present: str
-    Gender: str
+    accident_type: str
+    injury_prognosis: str
+    special_health_expenses: float = 0.0
+    special_reduction: float = 0.0
+    special_overage: float = 0.0
+    general_rest: float = 0.0
+    special_additional_injury: float = 0.0
+    special_earnings_loss: float = 0.0
+    special_usage_loss: float = 0.0
+    special_medications: float = 0.0
+    special_asset_damage: float = 0.0
+    special_rehabilitation: float = 0.0
+    special_fixes: float = 0.0
+    general_fixed: float = 0.0
+    general_uplift: float = 0.0
+    special_loaner_vehicle: float = 0.0
+    special_trip_costs: float = 0.0
+    special_journey_expenses: float = 0.0
+    special_therapy: float = 0.0
+    exceptional_circumstances: str
+    minor_psychological_injury: str
+    dominant_injury: str
+    whiplash: str
+    vehicle_type: str
+    weather_conditions: str
+    vehicle_age: int = 0
+    driver_age: int = 0
+    number_of_passengers: int = 0
+    accident_description: str
+    injury_description: str
+    police_report_filed: str
+    witness_present: str
+    gender: str
 
+# ✅ Step 2: Prediction endpoint
 @app.post("/predict/")
 def predict_settlement(input: ClaimInput):
-    # Convert input to DataFrame
     data = input.dict()
     df = pd.DataFrame([data])
 
-    # Feature Engineering
+    # ✅ Step 3: Rename to match training feature names
+    rename_map = {
+        'accident_type': 'Accident Type',
+        'injury_prognosis': 'Injury_Prognosis',
+        'special_health_expenses': 'SpecialHealthExpenses',
+        'special_reduction': 'SpecialReduction',
+        'special_overage': 'SpecialOverage',
+        'general_rest': 'GeneralRest',
+        'special_additional_injury': 'SpecialAdditionalInjury',
+        'special_earnings_loss': 'SpecialEarningsLoss',
+        'special_usage_loss': 'SpecialUsageLoss',
+        'special_medications': 'SpecialMedications',
+        'special_asset_damage': 'SpecialAssetDamage',
+        'special_rehabilitation': 'SpecialRehabilitation',
+        'special_fixes': 'SpecialFixes',
+        'general_fixed': 'GeneralFixed',
+        'general_uplift': 'GeneralUplift',
+        'special_loaner_vehicle': 'SpecialLoanerVehicle',
+        'special_trip_costs': 'SpecialTripCosts',
+        'special_journey_expenses': 'SpecialJourneyExpenses',
+        'special_therapy': 'SpecialTherapy',
+        'exceptional_circumstances': 'Exceptional_Circumstances',
+        'minor_psychological_injury': 'Minor_Psychological_Injury',
+        'dominant_injury': 'Dominant injury',
+        'whiplash': 'Whiplash',
+        'vehicle_type': 'Vehicle Type',
+        'weather_conditions': 'Weather Conditions',
+        'vehicle_age': 'Vehicle Age',
+        'driver_age': 'Driver Age',
+        'number_of_passengers': 'Number of Passengers',
+        'accident_description': 'Accident Description',
+        'injury_description': 'Injury Description',
+        'police_report_filed': 'Police Report Filed',
+        'witness_present': 'Witness Present',
+        'gender': 'Gender'
+    }
+
+    df = df.rename(columns=rename_map)
+
+    # ✅ Step 4: Feature Engineering
     df['Exceptional_Circumstances'] = df['Exceptional_Circumstances'].map({'Yes': 1, 'No': 0})
     df['Minor_Psychological_Injury'] = df['Minor_Psychological_Injury'].map({'Yes': 1, 'No': 0})
     df['Whiplash'] = df['Whiplash'].map({'Yes': 1, 'No': 0})
-    df['Police_Report_Filed'] = df['Police_Report_Filed'].map({'Yes': 1, 'No': 0})
-    df['Witness_Present'] = df['Witness_Present'].map({'Yes': 1, 'No': 0})
+    df['Police Report Filed'] = df['Police Report Filed'].map({'Yes': 1, 'No': 0})
+    df['Witness Present'] = df['Witness Present'].map({'Yes': 1, 'No': 0})
     df['Gender'] = df['Gender'].map({'Male': 0, 'Female': 1})
 
-    # Injury Prognosis weeks extraction
     df['prognosis_weeks'] = df['Injury_Prognosis'].str.extract(r'(\d+)').astype(float).fillna(0)
+    df['Description_Length'] = df['Accident Description'].apply(lambda x: len(str(x).split()))
+    df['Injury Description'] = df['Injury Description'].fillna("Missing")
 
-    # Description length
-    df['Description_Length'] = df['Accident_Description'].apply(lambda x: len(str(x).split()))
-
-    # Injury Description filling if empty
-    df['Injury_Description'] = df['Injury_Description'].fillna("Missing")
-
-    # Select relevant columns (same as training)
-    features = [
-        'Driver_Age', 'Gender', 'SpecialHealthExpenses', 'prognosis_weeks',
-        'Injury_Description', 'Description_Length'
-    ]
-
+    # ✅ Step 5: Select features for preprocessing
     X_input = df.rename(columns={
-        'Driver_Age': 'age',
+        'Driver Age': 'age',
         'Gender': 'gender',
         'SpecialHealthExpenses': 'income',
         'prognosis_weeks': 'prognosis_weeks',
-        'Injury_Description': 'Injury Description',
+        'Injury Description': 'Injury Description',
         'Description_Length': 'Description_Length'
     })
 
     X_input = X_input[['age', 'gender', 'income', 'prognosis_weeks', 'Injury Description', 'Description_Length']]
 
-    # Preprocess input
+    # ✅ Step 6: Preprocess, Cluster, Predict
     X_transformed = preprocessor.transform(X_input)
-
-    # Cluster
     cluster = kmeans.predict(X_transformed)[0]
-
-    # Add cluster to input
     X_final = np.hstack((X_transformed, [[cluster]]))
-
-    # Predict
     prediction = model.predict(X_final)[0]
 
     return {
