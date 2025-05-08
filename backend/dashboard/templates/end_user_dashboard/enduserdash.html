@@ -65,30 +65,36 @@
     <h3>Upload File (Image, Text, Audio, Video)</h3>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <input type="file" name="file" id="fileInput">
+        <input type="file" name="file" id="fileInput" required>
         <button type="submit">Upload File</button>
     </form>
 
     {% if success %}
-    <div id="success-message">Document uploaded successfully</div>
+        <div id="success-message">✅ Document uploaded successfully</div>
+        
+        {% if prediction %}
+            <div style="margin-top: 10px;">
+                <strong>🔮 Prediction:</strong> £{{ prediction }}<br>
+                <strong>📊 Cluster Group:</strong> {{ group }}
+            </div>
+        {% endif %}
+    {% endif %}
 
-    {% if prediction %}
-    <div id="success-message">
-        Prediction: £{{ prediction }} <br>
-        Group: {{ group }}
+    {% if error %}
+        <div id="error-message">❌ {{ error }}</div>
+    {% endif %}
+</div>
+
+{% if uploaded_files %}
+    <div style="margin-top: 30px; width: 400px;">
+        <h3>📂 Previously Uploaded Files</h3>
+        <ul style="list-style: none; padding-left: 0;">
+            {% for file in uploaded_files %}
+                <li>{{ file.file.name }} — {{ file.uploaded_at }}</li>
+            {% endfor %}
+        </ul>
     </div>
 {% endif %}
-
-
-    {% if group %}
-        <div style="margin-top: 5px;">
-            <strong>Group:</strong> {{ group }}
-        </div>
-    {% endif %}
-{% elif error %}
-    <div id="error-message">An error occurred. Please try again.</div>
-{% endif %}
-</div>
 
 <p id="description">If you upload a file, you will get a prediction using our AI model.</p>
 

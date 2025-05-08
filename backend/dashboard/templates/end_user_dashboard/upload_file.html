@@ -1,0 +1,55 @@
+<style>
+    .msg-error { color: red; }
+    .msg-success { color: green; }
+    .msg-default { color: black; }
+</style>
+
+<h2>Upload a File for Prediction</h2>
+
+<form method="post" enctype="multipart/form-data" style="margin-bottom: 20px;">
+    {% csrf_token %}
+    <input type="file" name="file" required>
+    <button type="submit">Upload File</button>
+</form>
+
+<!-- Display Django messages -->
+{% if messages %}
+    <ul>
+        {% for message in messages %}
+            <li class="msg-{% if message.tags %}{{ message.tags }}{% else %}default{% endif %}">
+                {{ message }}
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<!-- Feedback section -->
+{% if success %}
+    <p class="msg-success">✅ File uploaded successfully!</p>
+{% endif %}
+
+{% if prediction %}
+    <h3>🔮 Predicted Settlement: £{{ prediction }}</h3>
+{% endif %}
+
+{% if group %}
+    <p>📊 Assigned Group: {{ group }}</p>
+{% endif %}
+
+{% if error %}
+    <p class="msg-error">❌ {{ error }}</p>
+{% endif %}
+
+{% if last_uploaded_file %}
+    <p>📂 Last Uploaded File: {{ last_uploaded_file }}</p>
+{% endif %}
+
+<!-- File history -->
+{% if uploaded_files %}
+    <h3>🗂️ Your Uploaded Files</h3>
+    <ul>
+        {% for file in uploaded_files %}
+            <li>{{ file.file.name }} — {{ file.uploaded_at|date:"Y-m-d H:i" }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}

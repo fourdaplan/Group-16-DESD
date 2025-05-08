@@ -4,7 +4,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 from admin_panel import views as admin_views
 from end_user_panel import views as enduser_views
-
 from dashboard import views as dashboard_views
 
 urlpatterns = [
@@ -19,12 +18,13 @@ urlpatterns = [
     path('api/core-model/', include('mlaas_service.urls')),
 
 
-    # User-facing Dashboards (handled via dashboard/views.py)
-    path('end-user-dashboard/', dashboard_views.end_user_dashboard, name='end_user_dashboard'),
+    # User-facing Dashboards
+    path('end-user-dashboard/', enduser_views.upload_file_view, name='end_user_dashboard'),
     path('admin-dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
     path('ai-dashboard/', dashboard_views.ai_dashboard, name='ai_dashboard'),
     path('finance-dashboard/', dashboard_views.finance_dashboard, name='finance_dashboard'),
     path('login/', dashboard_views.custom_login, name='login'),
+
 
     # ✅ Add main dashboard route here
     path('main-dashboard/', dashboard_views.main_dashboard, name='main_dashboard'),
