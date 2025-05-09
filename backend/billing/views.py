@@ -1,21 +1,276 @@
-from rest_framework import viewsets, permissions
-from .models import BillingRecord
-from .serializers import BillingRecordSerializer
-from django.db.models import Sum, Count
+from django.db.models import F, Sum, Count
+from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.http import HttpResponse
+import csv
+import logging
+import requests
+from .models import BillingRecord, SystemLog
+from .serializers import BillingRecordSerializer
+from django.utils import timezone
 
-class BillingViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = BillingRecord.objects.all().order_by('-timestamp')
-    serializer_class = BillingRecordSerializer
-    permission_classes = [permissions.IsAdminUser]
+logger = logging.getLogger(__name__)
 
-    @action(detail=False, methods=['get'])
+class BillingViewSet(viewsets.ViewSet):
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def summary(self, request):
-        data = BillingRecord.objects.values('user__username') \
-            .annotate(
-                total_actions=Count('id'),
-                total_due=Sum('cost')
-            ).order_by('-total_due')
+        if not (
+            request.user.groups.filter(name='Finance').exists() or
+            request.user.groups.filter(name='Admin').exists() or
+            request.user.is_superuser or
+            request.user.is_staff
+        ):
+            return Response({"detail": "Access denied. You must be a finance or admin user."}, status=status.HTTP_403_FORBIDDEN)
 
-        return Response(data)
+        qs = BillingRecord.objects.all()
+
+        start = request.query_params.get("start_date")
+        end = request.query_params.get("end_date")
+        filter_user = request.query_params.get("username")
+
+        if start:
+            qs = qs.filter(timestamp__gte=start)
+        if end:
+            qs = qs.filter(timestamp__lte=end)
+        if filter_user:
+            qs = qs.filter(user__username=filter_user)
+
+        data = (
+            qs
+            .values(user=F("user__username"))
+            .annotate(
+                total_actions=Count("id"),
+                total_due=Sum("cost")
+            )
+            .order_by("-total_due")
+        )
+
+        SystemLog.objects.create(
+            user=request.user,
+            action="Load Billing Summary",
+            detail=f"start={start}, end={end}, username={filter_user or 'all'}"
+        )
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
+    def invoice(self, request):
+        username_param = request.query_params.get("username")
+
+        if (
+            username_param and
+            (
+                request.user.groups.filter(name='Finance').exists() or
+                request.user.groups.filter(name='Admin').exists() or
+                request.user.is_superuser or
+                request.user.is_staff
+            )
+        ):
+            from django.contrib.auth.models import User
+            try:
+                user = User.objects.get(username=username_param)
+            except User.DoesNotExist:
+                return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            user = request.user
+
+        start = request.query_params.get("start_date")
+        end = request.query_params.get("end_date")
+
+        qs = BillingRecord.objects.filter(user=user)
+        if start:
+            qs = qs.filter(timestamp__gte=start)
+        if end:
+            qs = qs.filter(timestamp__lte=end)
+
+        records = qs.values("timestamp", "action", "cost").order_by("timestamp")
+        total = qs.aggregate(total_due=Sum("cost"))["total_due"] or 0
+
+        SystemLog.objects.create(
+            user=request.user,
+            action="Generate Invoice",
+            detail=f"for={user.username}, start={start}, end={end}"
+        )
+
+        from reportlab.pdfgen import canvas
+        from io import BytesIO
+
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer)
+        p.setFont("Helvetica", 12)
+
+        p.drawString(100, 800, f"Invoice for {user.username}")
+        p.drawString(100, 780, f"Period: {start or 'All Time'} to {end or 'Now'}")
+
+        y = 750
+        p.drawString(100, y, "Date")
+        p.drawString(250, y, "Action")
+        p.drawString(450, y, "Cost")
+        y -= 20
+
+        for record in records:
+            p.drawString(100, y, str(record["timestamp"].date()))
+            p.drawString(250, y, str(record["action"]))
+            p.drawString(450, y, f"{record['cost']:.2f}")
+            y -= 20
+            if y < 50:
+                p.showPage()
+                y = 800
+
+        y -= 10
+        p.drawString(100, y, "---------------------------------------------")
+        y -= 20
+        p.drawString(100, y, f"Total Due: £{total:.2f}")
+
+        p.showPage()
+        p.save()
+
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{user.username}_invoice.pdf"'
+        return response
+
+    @action(detail=False, methods=["get"], url_path="export", permission_classes=[permissions.IsAuthenticated])
+    def export_csv(self, request):
+        if not (
+            request.user.groups.filter(name='Finance').exists() or
+            request.user.groups.filter(name='Admin').exists() or
+            request.user.is_superuser or
+            request.user.is_staff
+        ):
+            return Response({"detail": "Access denied. You must be a finance or admin user."}, status=status.HTTP_403_FORBIDDEN)
+
+        start = request.query_params.get("start_date")
+        end = request.query_params.get("end_date")
+        qs = BillingRecord.objects.all()
+        if start:
+            qs = qs.filter(timestamp__gte=start)
+        if end:
+            qs = qs.filter(timestamp__lte=end)
+
+        summary = (
+            qs
+            .values("user__username")
+            .annotate(total_actions=Count("id"), total_due=Sum("cost"))
+            .order_by("user__username")
+        )
+
+        SystemLog.objects.create(
+            user=request.user,
+            action="Export CSV",
+            detail=f"start={start}, end={end}"
+        )
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="billing_summary.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Username', 'Total Actions', 'Total Due'])
+        for row in summary:
+            writer.writerow([
+                row["user__username"],
+                row["total_actions"],
+                format(row["total_due"] or 0, ".2f")
+            ])
+
+        return response
+
+    @action(detail=False, methods=["get"], url_path="export-pdf", permission_classes=[permissions.IsAuthenticated])
+    def export_pdf(self, request):
+        if not (
+            request.user.groups.filter(name='Finance').exists() or
+            request.user.groups.filter(name='Admin').exists() or
+            request.user.is_superuser or
+            request.user.is_staff
+        ):
+            return Response({"detail": "Access denied. You must be a finance or admin user."}, status=status.HTTP_403_FORBIDDEN)
+
+        start = request.query_params.get("start_date")
+        end = request.query_params.get("end_date")
+        qs = BillingRecord.objects.all()
+        if start:
+            qs = qs.filter(timestamp__gte=start)
+        if end:
+            qs = qs.filter(timestamp__lte=end)
+
+        summary = (
+            qs
+            .values("user__username")
+            .annotate(total_actions=Count("id"), total_due=Sum("cost"))
+            .order_by("user__username")
+        )
+
+        SystemLog.objects.create(
+            user=request.user,
+            action="Export PDF",
+            detail=f"start={start}, end={end}"
+        )
+
+        from reportlab.pdfgen import canvas
+        from io import BytesIO
+
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer)
+        p.setFont("Helvetica", 12)
+        p.drawString(100, 800, "Billing Summary Report")
+
+        y = 770
+        p.drawString(100, y, "User")
+        p.drawString(250, y, "Total Actions")
+        p.drawString(400, y, "Total Due")
+        y -= 20
+
+        for row in summary:
+            p.drawString(100, y, str(row["user__username"]))
+            p.drawString(250, y, str(row["total_actions"]))
+            p.drawString(400, y, f"{row['total_due']:.2f}")
+            y -= 20
+            if y < 50:
+                p.showPage()
+                y = 800
+
+        p.showPage()
+        p.save()
+
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="billing_summary.pdf"'
+        return response
+
+    @action(detail=False, methods=["post"], url_path="send-to-billing", permission_classes=[permissions.IsAuthenticated])
+    def send_to_billing(self, request):
+        from django.contrib.auth.models import User
+
+        username = request.data.get("username")
+        if not username:
+            return Response({"error": "Username is required."}, status=400)
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=404)
+
+        qs = BillingRecord.objects.filter(user=user)
+        total = qs.aggregate(total_due=Sum("cost"))["total_due"] or 0
+        summary = {
+            "username": user.username,
+            "total_due": f"{total:.2f}",
+            "invoice_id": f"{user.username}-INV-{timezone.now().strftime('%Y%m%d%H%M')}"
+        }
+
+        # Send to mock billing service (like httpbin)
+        mock_url = "https://httpbin.org/post"
+        response = requests.post(mock_url, json=summary)
+
+        SystemLog.objects.create(
+            user=request.user,
+            action="Send Invoice to Billing Provider",
+            detail=f"invoice_for={user.username}, status={response.status_code}"
+        )
+
+        return Response({
+            "status": "sent",
+            "billing_service_response": response.json()
+        }, status=response.status_code)
