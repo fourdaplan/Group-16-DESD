@@ -88,12 +88,15 @@ def add_user(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            new_user = form.save()
+            new_user = form.save(commit=False)
+            new_user.is_active = True  # ✅ Ensure user is active
+            new_user.save()
             log_activity(request.user, f"Created user: {new_user.username}")
             return redirect('user_list')
     else:
         form = UserCreationForm()
     return render(request, 'admin_dashboard/add_user.html', {'form': form})
+
 
 # ✅ Edit Existing User (Enhanced with roles + permissions)
 @user_passes_test(lambda u: u.is_superuser)
