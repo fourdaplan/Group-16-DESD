@@ -5,7 +5,15 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
 from .models import UploadedFile
+from billing.models import BillingRecord  # ✅ Import BillingRecord model
 from admin_panel.utils import log_activity  # ✅ Import logging utility
+from django.contrib.auth.models import Group, User
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.http import HttpResponse
+from billing.models import BillingRecord  # import BillingRecord
+from django.utils import timezone
 
 
 def clean_csv_record(record):
@@ -49,14 +57,12 @@ def upload_file_view(request):
     error = None
     success_message = None
 
-    # ✅ Set session role if user belongs to end user group
     if request.user.groups.filter(name='end users').exists():
         request.session['role'] = 'end_user'
 
     uploaded_files = UploadedFile.objects.filter(user=request.user).order_by('-uploaded_at')
 
     if request.method == 'POST':
-        # ✅ Feedback submission
         if request.POST.get("feedback_only"):
             feedback_text = request.POST.get("feedback")
             latest_file = UploadedFile.objects.filter(user=request.user).order_by('-uploaded_at').first()[:3]
@@ -65,7 +71,7 @@ def upload_file_view(request):
                 latest_file.feedback = feedback_text
                 latest_file.save()
                 success_message = "✅ Feedback submitted successfully!"
-                log_activity(request.user, f"Submitted feedback: \"{feedback_text}\"")  # ✅ Log feedback
+                log_activity(request.user, f"Submitted feedback: \"{feedback_text}\"")
             else:
                 error = "❌ No uploaded file to attach feedback to."
 
@@ -78,7 +84,6 @@ def upload_file_view(request):
                 'success_message': success_message if not error else None
             })
 
-        # ✅ File upload for prediction
         uploaded_file = request.FILES.get('file')
 
         if uploaded_file:
@@ -93,7 +98,7 @@ def upload_file_view(request):
                     file_type=file_type,
                     user=request.user
                 )
-                log_activity(request.user, f"Uploaded file: {uploaded_file.name}")  # ✅ Log upload
+                log_activity(request.user, f"Uploaded file: {uploaded_file.name}")
 
                 reader = csv.DictReader(io.StringIO(file_data))
                 record = next(reader)
@@ -117,7 +122,14 @@ def upload_file_view(request):
                     uploaded_file_obj.cluster = group
                     uploaded_file_obj.save()
 
-                    log_activity(request.user, f"Prediction made: £{prediction}, Cluster: {group}")  # ✅ Log prediction
+                    # ✅ Save billing record
+                    BillingRecord.objects.create(
+                        user=request.user,
+                        action="ML prediction request",
+                        cost=prediction or 0
+                    )
+
+                    log_activity(request.user, f"Prediction made: £{prediction}, Cluster: {group}")
 
                 else:
                     error = f"API Error: {response.status_code}"
@@ -132,3 +144,33 @@ def upload_file_view(request):
         'uploaded_files': uploaded_files,
         'success_message': success_message
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_end_users(request):
+    try:
+        group = Group.objects.get(name='end users')
+        users = group.user_set.all().values('username')
+        return Response(list(users))
+    except Group.DoesNotExist:
+        return Response([], status=200)
+
+@login_required
+def download_invoice_csv(request):
+    user = request.user
+    records = BillingRecord.objects.filter(user=user)
+
+    if not records.exists():
+        return HttpResponse("❌ No billing records found for you.", status=404)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{user.username}_invoice.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Timestamp', 'Action', 'Cost'])
+
+    for record in records:
+        writer.writerow([record.timestamp.strftime('%Y-%m-%d %H:%M'), record.action, f"£{record.cost:.2f}"])
+
+    return response

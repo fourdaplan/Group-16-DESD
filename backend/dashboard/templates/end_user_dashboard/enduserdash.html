@@ -128,6 +128,10 @@
       font-size: 14px;
       color: #333;
     }
+
+    .invoice-btn {
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
@@ -156,6 +160,11 @@
         <strong>🔮 Prediction:</strong> £{{ prediction }}<br>
         <strong>📊 Cluster Group:</strong> {{ group }}
       </div>
+
+      <!-- ✅ Invoice download button -->
+      <form method="get" action="/api/end-user/invoice/">
+        <button type="submit" class="invoice-btn">📥 Download My Invoice (CSV)</button>
+      </form>
     {% endif %}
   {% endif %}
 

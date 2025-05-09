@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 from admin_panel import views as admin_views
 from end_user_panel import views as enduser_views
 from dashboard import views as dashboard_views
+from billing.views import finance_dashboard_view
 
 urlpatterns = [
     # Django Admin
@@ -22,7 +23,7 @@ urlpatterns = [
     path('end-user-dashboard/', enduser_views.upload_file_view, name='end_user_dashboard'),
     path('admin-dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
     path('ai-dashboard/', dashboard_views.ai_dashboard, name='ai_dashboard'),
-    path('finance-dashboard/', dashboard_views.finance_dashboard, name='finance_dashboard'),
+    path('finance-dashboard/', finance_dashboard_view, name='finance_dashboard'),
     path('login/', dashboard_views.custom_login, name='login'),
 
 

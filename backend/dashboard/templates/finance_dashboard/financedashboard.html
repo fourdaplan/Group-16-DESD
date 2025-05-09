@@ -4,101 +4,207 @@
   <meta charset="UTF-8">
   <title>Finance Dashboard</title>
   <style>
-    body { font-family: Arial; padding: 2rem; background: #f8f9fa; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { border: 1px solid #ccc; padding: 0.5rem; }
-    th { background: #eee; }
-    label, input, select, button { margin: 0.5rem 0.5rem 0.5rem 0; }
-    button { cursor: pointer; }
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(to bottom right, #e0e5ec, #ffffff);
+      background-attachment: fixed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    body::before, body::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: 0;
+    }
+
+    body::before {
+      width: 500px;
+      height: 500px;
+      background: rgba(0, 122, 255, 0.2);
+      top: -100px;
+      left: -100px;
+    }
+
+    body::after {
+      width: 600px;
+      height: 600px;
+      background: rgba(255, 45, 85, 0.15);
+      bottom: -150px;
+      right: -150px;
+    }
+
+    .dashboard-card {
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(15px);
+      border-radius: 16px;
+      padding: 30px;
+      width: 800px;
+      max-width: 90%;
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+    }
+
+    h1 {
+      color: #111;
+      margin-bottom: 20px;
+    }
+
+    input, select, button {
+      padding: 12px;
+      margin: 10px 5px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: none;
+    }
+
+    button {
+      background-color: #007aff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #005fe0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    th {
+      background-color: #eee;
+    }
+
+    label {
+      margin: 0 5px;
+      font-weight: bold;
+    }
+
+    #error-message {
+      color: red;
+      margin-top: 15px;
+    }
+
+    form.logout-form {
+      margin-bottom: 1rem;
+    }
+
+    form.logout-form button {
+      width: auto;
+    }
   </style>
 </head>
 <body>
-  <h1>Finance Dashboard</h1>
 
-  <form method="POST" action="/logout/" style="margin-bottom: 1rem;">
-    {% csrf_token %}
-    <button type="submit">Logout</button>
-  </form>
+  <div class="dashboard-card">
+    <h1>Finance Dashboard</h1>
 
-  <div>
-    <label>From: <input type="date" id="start-date"></label>
-    <label>To: <input type="date" id="end-date"></label>
-    <button onclick="loadBilling()">Load</button>
-    <button onclick="downloadCSV()">Download CSV</button>
-    <button onclick="downloadPDF()">Download PDF</button>
-    <button onclick="downloadInvoice()">Download My Invoice</button>
+    <form method="POST" action="/logout/" class="logout-form">
+      {% csrf_token %}
+      <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+      <button type="submit">Logout</button>
+    </form>
+
+    <div>
+      <label>From: <input type="date" id="start-date"></label>
+      <label>To: <input type="date" id="end-date"></label>
+      <label>User:
+        <select id="user-select">
+          <option value="">-- Choose user --</option>
+        </select>
+      </label>
+    </div>
+
+    <div>
+      <button onclick="loadBilling()">Load</button>
+      <button onclick="downloadCSV()">Download CSV</button>
+      <button onclick="downloadInvoice()">Download My Invoice</button>
+      <button onclick="sendToBilling()">Send to Billing</button>
+    </div>
+
+    <table id="billing-table" style="display: none;">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Actions</th>
+          <th>Total Due</th>
+        </tr>
+      </thead>
+      <tbody id="billing-body"></tbody>
+    </table>
+
+    <p id="error-message"></p>
   </div>
-
-  <div>
-    <label for="user-select">Select user to send invoice:</label>
-    <select id="user-select">
-      <option value="">-- Choose user --</option>
-    </select>
-    <button onclick="sendToBilling()">Send to Billing</button>
-  </div>
-
-  <table id="billing-table">
-    <thead>
-      <tr>
-        <th>User</th>
-        <th>Actions</th>
-        <th>Total Due</th>
-      </tr>
-    </thead>
-    <tbody id="billing-body"></tbody>
-  </table>
-
-  <p id="error-message" style="color:red;"></p>
 
   <script>
-    document.addEventListener("DOMContentLoaded", fetchUsers);
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchUsers();
+    });
 
     function loadBilling() {
       const start = document.getElementById("start-date").value;
       const end = document.getElementById("end-date").value;
+      const user = document.getElementById("user-select").value;
       let url = `/api/billing/summary/?`;
       if (start) url += `start_date=${start}&`;
       if (end)   url += `end_date=${end}&`;
+      if (user)  url += `username=${user}&`;
 
       fetch(url, { credentials: 'include' })
-      .then(r => {
-        if (!r.ok) throw new Error();
-        return r.json();
-      })
-      .then(data => {
-        const tbody = document.getElementById("billing-body");
-        tbody.innerHTML = "";
-        data.forEach(entry => {
-          tbody.innerHTML += `
-            <tr>
-              <td>${entry.user}</td>
-              <td>${entry.total_actions}</td>
-              <td>${parseFloat(entry.total_due).toFixed(2)}</td>
-            </tr>`;
+        .then(r => {
+          if (!r.ok) throw new Error();
+          return r.json();
+        })
+        .then(data => {
+          const tbody = document.getElementById("billing-body");
+          tbody.innerHTML = "";
+          data.forEach(entry => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${entry.username}</td>
+                <td>${entry.total_actions}</td>
+                <td>${parseFloat(entry.total_due).toFixed(2)}</td>
+              </tr>`;
+          });
+          document.getElementById("billing-table").style.display = "table";
+          document.getElementById("error-message").textContent = "";
+        })
+        .catch(() => {
+          document.getElementById("billing-table").style.display = "none";
+          document.getElementById("error-message").textContent =
+            "Access denied or server error. Ensure you’re a finance admin.";
         });
-        document.getElementById("billing-table").style.display = "table";
-        document.getElementById("error-message").textContent = "";
-      })
-      .catch(() => {
-        document.getElementById("billing-table").style.display = "none";
-        document.getElementById("error-message").textContent =
-          "Access denied or server error. Ensure you’re a finance admin.";
-      });
     }
 
     function downloadCSV() {
       const start = document.getElementById("start-date").value;
       const end = document.getElementById("end-date").value;
       let url = `/api/billing/export/?`;
-      if (start) url += `start_date=${start}&`;
-      if (end)   url += `end_date=${end}&`;
-      window.open(url, "_blank");
-    }
-
-    function downloadPDF() {
-      const start = document.getElementById("start-date").value;
-      const end = document.getElementById("end-date").value;
-      let url = `/api/billing/export-pdf/?`;
       if (start) url += `start_date=${start}&`;
       if (end)   url += `end_date=${end}&`;
       window.open(url, "_blank");
@@ -134,8 +240,7 @@
     }
 
     function getCSRFToken() {
-      const match = document.cookie.match(/csrftoken=([^;]+)/);
-      return match ? match[1] : '';
+      return document.getElementById("csrf-token").value;
     }
 
     function fetchUsers() {

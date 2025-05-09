@@ -10,7 +10,7 @@ def custom_login(request):
         password = request.POST.get('password')
 
         user = authenticate(request, username=username, password=password)
-        if user is not None:
+        if user is not None and user.is_active:
             login(request, user)
 
             # ✅ Set role in session
@@ -28,8 +28,9 @@ def custom_login(request):
                 return redirect('/finance-dashboard/')
             else:
                 request.session['role'] = 'unknown'
+                return render(request, 'login_dashboard/login.html', {'error': 'Access group not assigned. Contact admin.'})
         else:
-            return render(request, 'login_dashboard/login.html', {'error': 'Invalid credentials'})
+            return render(request, 'login_dashboard/login.html', {'error': 'Invalid credentials or inactive account'})
 
     return render(request, 'login_dashboard/login.html')
 
