@@ -68,7 +68,7 @@ class ActivateModelView(APIView):
             return Response({"error": "Model not found."}, status=status.HTTP_404_NOT_FOUND)
 
 
-# ✅ Feedback listing view with session tracking and logging
+# ✅ Feedback listing view with prediction amount included
 class FeedbackListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -80,8 +80,9 @@ class FeedbackListView(APIView):
         feedback_data = [{
             "user": feedback.user.username,
             "file_name": feedback.file.name,
-            "uploaded_at": feedback.uploaded_at,
-            "feedback": feedback.feedback
+            "uploaded_at": feedback.uploaded_at.strftime('%Y-%m-%d %H:%M'),
+            "feedback": feedback.feedback,
+            "predicted_settlement": feedback.predicted_settlement
         } for feedback in feedbacks]
 
         log_activity(request.user, "Viewed user feedback list")  # ✅ Log feedback access
