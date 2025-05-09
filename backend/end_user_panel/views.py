@@ -65,7 +65,7 @@ def upload_file_view(request):
     if request.method == 'POST':
         if request.POST.get("feedback_only"):
             feedback_text = request.POST.get("feedback")
-            latest_file = UploadedFile.objects.filter(user=request.user).order_by('-uploaded_at').first()[:3]
+            latest_file = UploadedFile.objects.filter(user=request.user).order_by('-uploaded_at').first()
 
             if latest_file:
                 latest_file.feedback = feedback_text
