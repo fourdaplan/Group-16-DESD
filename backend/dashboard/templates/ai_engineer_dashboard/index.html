@@ -238,7 +238,10 @@
           card.innerHTML = `
             <div class="feedback-user">👤 ${feedback.user}</div>
             <div class="feedback-text">"${feedback.feedback}"</div>
-            <div style="font-size:12px; color:gray;">File: ${feedback.file_name} | Uploaded: ${feedback.uploaded_at}</div>
+            <div style="font-size:12px; color:gray;">
+              File: ${feedback.file_name} | Uploaded: ${feedback.uploaded_at}<br>
+              🔮 Predicted Settlement: £${feedback.predicted_settlement ?? 'N/A'}
+            </div>
           `;
           container.appendChild(card);
         });
