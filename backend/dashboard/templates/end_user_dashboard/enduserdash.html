@@ -11,17 +11,17 @@
       padding: 0;
     }
 
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
     body {
-      min-height: 100vh;
       background: linear-gradient(to bottom right, #e0e5ec, #ffffff);
-      background-attachment: fixed;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
       position: relative;
-      overflow: hidden;
-      text-align: center;
     }
 
     body::before, body::after {
@@ -48,19 +48,23 @@
       right: -150px;
     }
 
-    .upload-card {
+    .container {
       z-index: 1;
-      background: rgba(255, 255, 255, 0.65);
-      backdrop-filter: blur(15px);
+      width: 100%;
+      max-width: 600px;
+      max-height: 95vh;
+      overflow-y: auto;
+      padding: 30px 20px;
+      background-color: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
       border-radius: 16px;
-      padding: 30px;
-      width: 400px;
       box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
     }
 
     h2, h3 {
       color: #111;
       margin-bottom: 20px;
+      text-align: center;
     }
 
     input, button, textarea {
@@ -106,11 +110,11 @@
       margin-top: 25px;
       font-size: 14px;
       color: #555;
+      text-align: center;
     }
 
     .uploaded-files {
       margin-top: 30px;
-      width: 400px;
       background: rgba(255, 255, 255, 0.6);
       border-radius: 12px;
       padding: 20px;
@@ -129,79 +133,95 @@
       color: #333;
     }
 
+    .feedback-text {
+      color: #007aff;
+      font-size: 13px;
+    }
+
     .invoice-btn {
       margin-top: 15px;
+    }
+
+    hr {
+      margin: 20px 0;
+      border: none;
+      border-top: 1px solid #ccc;
     }
   </style>
 </head>
 <body>
 
-<h2>Upload a File to Receive a Prediction</h2>
+<div class="container">
 
-{% if request.session.role %}
-  <p style="margin-bottom: 20px; font-size: 14px; color: #444;">
-    Logged in as: <strong>{{ request.session.role|capfirst }}</strong>
-  </p>
-{% endif %}
+  <h2>Upload a File to Receive a Prediction</h2>
 
-<div class="upload-card">
-  <h3>Upload File (Image, Text, Audio, Video)</h3>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <input type="file" name="file" id="fileInput" required>
-    <button type="submit">Upload File</button>
-  </form>
+  {% if request.session.role %}
+    <p style="margin-bottom: 20px; font-size: 14px; color: #444; text-align: center;">
+      Logged in as: <strong>{{ request.session.role|capfirst }}</strong>
+    </p>
+  {% endif %}
 
-  {% if success %}
-    <div id="success-message">✅ Document uploaded successfully</div>
+  <div class="upload-card">
+    <h3>Upload File (Image, Text, Audio, Video)</h3>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="file" name="file" id="fileInput" required>
+      <button type="submit">Upload File</button>
+    </form>
 
-    {% if prediction %}
-      <div style="margin-top: 10px;">
-        <strong>🔮 Prediction:</strong> £{{ prediction }}<br>
-        <strong>📊 Cluster Group:</strong> {{ group }}
-      </div>
+    {% if success %}
+      <div id="success-message">✅ Document uploaded successfully</div>
 
-      <!-- ✅ Invoice download button -->
-      <form method="get" action="/api/end-user/invoice/">
-        <button type="submit" class="invoice-btn">📥 Download My Invoice (CSV)</button>
-      </form>
+      {% if prediction %}
+        <div style="margin-top: 10px;">
+          <strong>🔮 Prediction:</strong> £{{ prediction }}<br>
+          <strong>📊 Cluster Group:</strong> {{ group }}
+        </div>
+
+        <form method="get" action="/api/end-user/invoice/">
+          <button type="submit" class="invoice-btn">📥 Download My Invoice (CSV)</button>
+        </form>
+      {% endif %}
     {% endif %}
-  {% endif %}
 
-  {% if error %}
-    <div id="error-message">❌ {{ error }}</div>
-  {% endif %}
+    {% if error %}
+      <div id="error-message">❌ {{ error }}</div>
+    {% endif %}
 
-  {% if success_message %}
-    <div id="success-message">{{ success_message }}</div>
-  {% endif %}
+    {% if success_message %}
+      <div id="success-message">{{ success_message }}</div>
+    {% endif %}
 
-  <hr style="margin: 20px 0;">
+    <hr>
 
-  <h3>📢 Submit Feedback about Prediction</h3>
-  <form method="post">
-    {% csrf_token %}
-    <textarea name="feedback" rows="4" placeholder="Enter your feedback here..." required></textarea>
-    <input type="hidden" name="feedback_only" value="1">
-    <button type="submit">Submit Feedback</button>
-  </form>
-</div>
-
-{% if uploaded_files %}
-  <div class="uploaded-files">
-    <h3>📂 Previously Uploaded Files</h3>
-    <ul>
-      {% for file in uploaded_files %}
-        <li>{{ file.file.name }} — {{ file.uploaded_at }}</li>
-        {% if file.feedback %}
-          <div style="color: #007aff; font-size: 13px;">Feedback: "{{ file.feedback }}"</div>
-        {% endif %}
-      {% endfor %}
-    </ul>
+    <h3>📢 Submit Feedback about Prediction</h3>
+    <form method="post">
+      {% csrf_token %}
+      <textarea name="feedback" rows="4" placeholder="Enter your feedback here..." required></textarea>
+      <input type="hidden" name="feedback_only" value="1">
+      <button type="submit">Submit Feedback</button>
+    </form>
   </div>
-{% endif %}
 
-<p id="description">If you upload a file, you will get a prediction using our AI model.</p>
+  {% if uploaded_files %}
+    <div class="uploaded-files">
+      <h3>📂 Previously Uploaded Files</h3>
+      <ul>
+        {% for file in uploaded_files %}
+          <li>{{ file.file.name }} — {{ file.uploaded_at }}</li>
+          {% if file.feedback %}
+            <div class="feedback-text">Feedback: "{{ file.feedback }}"</div>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <p id="description">
+    If you upload a file, you will get a prediction using our AI model.
+  </p>
+
+</div>
 
 </body>
 </html>
