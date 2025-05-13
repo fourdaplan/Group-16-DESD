@@ -123,14 +123,14 @@ ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost').split()
 # Allow iframe embedding
 X_FRAME_OPTIONS = 'ALLOWALL'
 
-# ✅ Enable session-based authentication for DRF
+#  Enable session-based authentication for DRF
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
     ]
 }
 
-# ✅ Secure CORS config for session + CSRF support
+#  Secure CORS config for session + CSRF support
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [

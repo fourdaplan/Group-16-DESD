@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from .models import UploadedModel
 from end_user_panel.models import UploadedFile
 from .serializers import UploadedModelSerializer
-from admin_panel.utils import log_activity  # ✅ Logging utility
+from admin_panel.utils import log_activity  #  Logging utility
 
 
 class UploadedModelListCreateView(generics.ListCreateAPIView):
@@ -19,10 +19,10 @@ class UploadedModelListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         model_instance = serializer.save(user=self.request.user)
-        log_activity(self.request.user, f"Uploaded ML model: {model_instance.name}")  # ✅ Log model upload
+        log_activity(self.request.user, f"Uploaded ML model: {model_instance.name}")  #  Log model upload
 
     def post(self, request, *args, **kwargs):
-        # ✅ Set role in session
+        #  Set role in session
         if request.user.groups.filter(name='AI Engineer').exists():
             request.session['role'] = 'ai_engineer'
         return super().post(request, *args, **kwargs)
@@ -38,7 +38,7 @@ class UserModelListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        # ✅ Set role in session
+        #  Set role in session
         if request.user.groups.filter(name='AI Engineer').exists():
             request.session['role'] = 'ai_engineer'
 
@@ -52,7 +52,7 @@ class ActivateModelView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
-        # ✅ Set role in session
+        #  Set role in session
         if request.user.groups.filter(name='AI Engineer').exists():
             request.session['role'] = 'ai_engineer'
 
@@ -62,13 +62,13 @@ class ActivateModelView(APIView):
             model_to_activate.active = True
             model_to_activate.save()
 
-            log_activity(request.user, f"Activated model: {model_to_activate.name} (ID: {pk})")  # ✅ Log activation
+            log_activity(request.user, f"Activated model: {model_to_activate.name} (ID: {pk})")  #  Log activation
             return Response({"message": "Model activated successfully."})
         except UploadedModel.DoesNotExist:
             return Response({"error": "Model not found."}, status=status.HTTP_404_NOT_FOUND)
 
 
-# ✅ Feedback listing view with prediction amount included
+#  Feedback listing view with prediction amount included
 class FeedbackListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -85,5 +85,5 @@ class FeedbackListView(APIView):
             "predicted_settlement": feedback.predicted_settlement
         } for feedback in feedbacks]
 
-        log_activity(request.user, "Viewed user feedback list")  # ✅ Log feedback access
+        log_activity(request.user, "Viewed user feedback list")  #  Log feedback access
         return Response(feedback_data)

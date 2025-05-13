@@ -92,7 +92,7 @@ best_model = results[best_model_name]['model']
 joblib.dump(best_model, f"best_model_{best_model_name.lower()}.joblib")
 joblib.dump(preprocessor, "preprocessor.joblib")
 joblib.dump(kmeans, "kmeans_cluster.joblib")
-print(f"\n✅ Best model: {best_model_name}")
+print(f"\n Best model: {best_model_name}")
 
 # Save predictions
 output_df = X_test.copy()

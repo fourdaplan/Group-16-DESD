@@ -16,7 +16,7 @@ def custom_login(request):
         if user is not None and user.is_active:
             login(request, user)
 
-            # ✅ Set role in session
+            #  Set role in session
             if user.is_superuser:
                 request.session['role'] = 'admin'
                 return redirect('admin_dashboard')
@@ -38,7 +38,7 @@ def custom_login(request):
     return render(request, 'login_dashboard/login.html')
 
 
-# ✅ Role-based access control decorators
+#  Role-based access control decorators
 def is_ai_engineer(user):
     return user.groups.filter(name='AI Engineer').exists()
 
@@ -52,7 +52,7 @@ def is_admin(user):
     return user.is_superuser
 
 
-# ✅ Protected dashboards
+#  Protected dashboards
 @user_passes_test(is_admin)
 def admin_dashboard(request):
     return render(request, 'admin_dashboard/index.html')
@@ -76,7 +76,7 @@ def end_user_dashboard(request):
     return render(request, 'end_user_dashboard/enduserdash.html')
 
 
-# ✅ Catch-all or shared main dashboard
+#  Catch-all or shared main dashboard
 @login_required
 def main_dashboard(request):
     return render(request, 'dashboard/main_dashboard.html')

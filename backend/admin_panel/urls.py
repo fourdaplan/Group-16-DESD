@@ -21,7 +21,7 @@ urlpatterns = [
     path('approve/<int:user_id>/', approve_engineer, name='approve_engineer'),
     path('activity-logs/', view_activity_logs, name='view_activity_logs'),
 
-    # ✅ User Management URLs
+    #  User Management URLs
     path('users/', user_list, name='user_list'),
     path('users/add/', add_user, name='add_user'),
     path('users/edit/<int:user_id>/', edit_user, name='edit_user'),

@@ -121,7 +121,7 @@
     {% csrf_token %}
     {{ form.as_p }}
 
-    <!-- ✅ Group Selection -->
+    <!--  Group Selection -->
     <label for="group">Role / Group:</label>
     <select name="group" id="group">
       {% for group in groups %}
@@ -131,7 +131,7 @@
       {% endfor %}
     </select>
 
-    <!-- ✅ Permissions -->
+    <!--  Permissions -->
     <label>User Permissions:</label>
     <div class="permissions-box">
       {% for perm in permissions %}

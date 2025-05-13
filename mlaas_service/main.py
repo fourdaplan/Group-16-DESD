@@ -14,7 +14,7 @@ preprocessor = joblib.load(os.path.join(MODEL_DIR, "preprocessor.joblib"))
 kmeans = joblib.load(os.path.join(MODEL_DIR, "kmeans_cluster.joblib"))
 model = joblib.load(os.path.join(MODEL_DIR, "best_model_xgboost.joblib"))
 
-# ✅ Step 1: Define Pydantic input with clean field names
+#  Step 1: Define Pydantic input with clean field names
 class ClaimInput(BaseModel):
     accident_type: str
     injury_prognosis: str
@@ -50,15 +50,15 @@ class ClaimInput(BaseModel):
     witness_present: str
     gender: str
 
-# ✅ Step 2: Prediction endpoint
+#  Step 2: Prediction endpoint
 @app.post("/predict/")
 def predict_settlement(input: ClaimInput):
     data = input.model_dump()  # Pydantic v2 compatible
     df = pd.DataFrame([data])
 
-    # ✅ Step 3: Rename to match training feature names
+    #  Step 3: Rename to match training feature names
     rename_map = {
-        'accident_type': 'AccidentType',  # ✅ Updated to match model
+        'accident_type': 'AccidentType',  #  Updated to match model
         'injury_prognosis': 'Injury_Prognosis',
         'special_health_expenses': 'SpecialHealthExpenses',
         'special_reduction': 'SpecialReduction',
@@ -95,7 +95,7 @@ def predict_settlement(input: ClaimInput):
 
     df = df.rename(columns=rename_map)
 
-    # ✅ Step 4: Feature Engineering
+    #  Step 4: Feature Engineering
     df['Exceptional_Circumstances'] = df['Exceptional_Circumstances'].map({'Yes': 1, 'No': 0})
     df['Minor_Psychological_Injury'] = df['Minor_Psychological_Injury'].map({'Yes': 1, 'No': 0})
     df['Whiplash'] = df['Whiplash'].map({'Yes': 1, 'No': 0})
@@ -107,10 +107,10 @@ def predict_settlement(input: ClaimInput):
     df['Description_Length'] = df['Accident Description'].apply(lambda x: len(str(x).split()))
     df['Injury Description'] = df['Injury Description'].fillna("Missing")
 
-    # ✅ Step 5: Add placeholder column expected by preprocessor
+    #  Step 5: Add placeholder column expected by preprocessor
     df['Days_To_Claim'] = 0  # if not available, default to 0
 
-    # ✅ Step 6: Use full feature set
+    #  Step 6: Use full feature set
     X_input = df.copy()
 
     # Optional sanity check
@@ -119,7 +119,7 @@ def predict_settlement(input: ClaimInput):
     if missing:
         raise ValueError(f"❌ Missing columns for preprocessing: {missing}")
 
-    # ✅ Step 7: Preprocess, Cluster, Predict
+    #  Step 7: Preprocess, Cluster, Predict
     X_transformed = preprocessor.transform(X_input)
     cluster = kmeans.predict(X_transformed)[0]
     X_final = np.hstack((X_transformed, [[cluster]]))

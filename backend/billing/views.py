@@ -12,7 +12,7 @@ import requests
 from .models import BillingRecord, SystemLog
 from .serializers import BillingRecordSerializer
 from django.utils import timezone
-from django.contrib.auth.models import User  # ✅ Import User for group filtering
+from django.contrib.auth.models import User  #  Import User for group filtering
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class BillingViewSet(viewsets.ViewSet):
         ):
             return Response({"detail": "Access denied. You must be a finance or admin user."}, status=status.HTTP_403_FORBIDDEN)
 
-        # ✅ Only include records for users in the 'end users' group
+        #  Only include records for users in the 'end users' group
         end_user_ids = User.objects.filter(groups__name="end users").values_list("id", flat=True)
         qs = BillingRecord.objects.filter(user__id__in=end_user_ids)
 

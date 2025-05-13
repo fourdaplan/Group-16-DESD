@@ -5,4 +5,4 @@ class AdminPanelConfig(AppConfig):
     name = 'admin_panel'
 
     def ready(self):
-        import admin_panel.signals  # ✅ Import your signals here
+        import admin_panel.signals  #  Import your signals here

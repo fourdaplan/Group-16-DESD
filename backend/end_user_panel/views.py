@@ -5,8 +5,8 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
 from .models import UploadedFile
-from billing.models import BillingRecord  # ✅ Import BillingRecord model
-from admin_panel.utils import log_activity  # ✅ Import logging utility
+from billing.models import BillingRecord  #  Import BillingRecord model
+from admin_panel.utils import log_activity  #  Import logging utility
 from django.contrib.auth.models import Group, User
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -70,7 +70,7 @@ def upload_file_view(request):
             if latest_file:
                 latest_file.feedback = feedback_text
                 latest_file.save()
-                success_message = "✅ Feedback submitted successfully!"
+                success_message = " Feedback submitted successfully!"
                 log_activity(request.user, f"Submitted feedback: \"{feedback_text}\"")
             else:
                 error = "❌ No uploaded file to attach feedback to."
@@ -122,7 +122,7 @@ def upload_file_view(request):
                     uploaded_file_obj.cluster = group
                     uploaded_file_obj.save()
 
-                    # ✅ Save billing record
+                    #  Save billing record
                     BillingRecord.objects.create(
                         user=request.user,
                         action="ML prediction request",

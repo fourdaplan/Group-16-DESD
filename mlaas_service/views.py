@@ -22,7 +22,7 @@ def predict_settlement(request):
 
     # Rename fields to match trained feature names
     rename_map = {
-        'accident_type': 'AccidentType',  # ✅ Fixed (was 'Accident Type')
+        'accident_type': 'AccidentType',  #  Fixed (was 'Accident Type')
         'injury_prognosis': 'Injury_Prognosis',
         'special_health_expenses': 'SpecialHealthExpenses',
         'special_reduction': 'SpecialReduction',
@@ -86,13 +86,13 @@ def predict_settlement(request):
     df['Description_Length'] = df['Accident Description'].apply(lambda x: len(str(x).split()))
     df['Injury Description'] = df['Injury Description'].fillna("Missing")
 
-    # ✅ Add missing column required by model
+    #  Add missing column required by model
     df['Days_To_Claim'] = 0
 
-    # ✅ Use full feature set (don't limit to 6 columns)
+    #  Use full feature set (don't limit to 6 columns)
     X_input = df.copy()
 
-    # ✅ Optional check for missing features
+    #  Optional check for missing features
     required_columns = getattr(preprocessor, "feature_names_in_", [])
     missing = set(required_columns) - set(X_input.columns)
     if missing:

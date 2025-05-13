@@ -27,7 +27,7 @@ urlpatterns = [
     path('login/', dashboard_views.custom_login, name='login'),
 
 
-    # ✅ Add main dashboard route here
+    #  Add main dashboard route here
     path('main-dashboard/', dashboard_views.main_dashboard, name='main_dashboard'),
 ]
 

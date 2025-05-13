@@ -32,4 +32,4 @@ def generate_global_shap_summary(model_path, preprocessor_path, kmeans_path, ori
     shap.summary_plot(shap_values, X_clustered[:100], show=False)
     plt.savefig(output_path)
     plt.close()
-    print(f"✅ SHAP summary saved to: {output_path}")
+    print(f" SHAP summary saved to: {output_path}")
